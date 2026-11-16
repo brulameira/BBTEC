@@ -1,2 +1,2 @@
-# BBTEEC
+# BBTEC
 Projeto de Extensão
