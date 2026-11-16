@@ -1,0 +1,155 @@
+/* BBtec - Tela do usuário (Estoques). Tokens conforme o Guia Visual, seção 2 */
+:root {
+  --azul: #4F46E5;
+  --azul-hover: #7A74EE;
+  --azul-claro: #E8EEFC;
+  --laranja: #F4511E;
+  --branco: #FFFFFF;
+  --fundo: #F8FAFC;
+  --cinza-claro: #EEEEEE;
+  --cinza-medio: #A6A6A6;
+  --texto: #292929;
+  --titulo: #1F2937;
+  --verde: #43A047;
+  --vermelho: #D62828;
+  --raio: 14px;
+  --sombra: 0 4px 10px rgba(0, 0, 0, .18);
+}
+
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; }
+body { font-family: 'Poppins', sans-serif; font-size: 16px; color: var(--texto); background: var(--fundo); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+[hidden] { display: none !important; }
+
+/* Foco visível para navegação por teclado (guia 8) */
+:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
+.menu :focus-visible { outline-color: var(--branco); }
+
+.app { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+
+/* ---------- Menu lateral ---------- */
+.menu {
+  background: var(--laranja); color: var(--branco);
+  border-radius: 0 var(--raio) var(--raio) 0;
+  display: flex; flex-direction: column; padding: 20px 14px; gap: 28px;
+}
+.menu-usuario { display: flex; gap: 10px; align-items: center; }
+.menu-usuario strong { display: block; font-size: 14px; font-weight: 600; }
+.menu-usuario small { font-size: 12px; opacity: .9; overflow-wrap: anywhere; }
+.avatar { width: 40px; height: 40px; border-radius: 50%; background: #0F7BB8; display: grid; place-items: center; flex: none; }
+
+.menu ul { list-style: none; padding: 0; display: grid; gap: 8px; }
+.menu a {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+  color: var(--branco); text-decoration: none; font-weight: 600; font-size: 16px;
+  border-radius: 10px; position: relative;
+}
+.menu a:hover { background: rgba(255, 255, 255, .18); }
+.menu a.ativo { background: var(--cinza-claro); color: var(--azul); }
+.ponto { width: 9px; height: 9px; border-radius: 50%; background: var(--vermelho); border: 2px solid var(--laranja); position: absolute; left: 30px; top: 8px; }
+.menu .sair { margin-top: auto; font-size: 14px; }
+
+/* ---------- Conteúdo ---------- */
+.conteudo { padding: 20px 32px 40px; min-width: 0; }
+.topo { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+.titulo { border-left: 6px solid var(--titulo); padding-left: 10px; }
+h1 { font-size: 24px; font-weight: 600; color: var(--titulo); line-height: 1.2; }
+#contador { font-size: 14px; color: var(--azul); }
+
+.busca {
+  flex: 1; min-width: 220px; max-width: 520px; display: flex; align-items: center; gap: 10px;
+  background: var(--branco); border-radius: 999px; padding: 0 18px; height: 48px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .2);
+}
+.busca input { border: 0; outline: 0; flex: 1; font: inherit; background: transparent; color: var(--texto); }
+.busca:focus-within { box-shadow: 0 0 0 3px var(--azul); }
+
+.logo { margin-left: auto; display: grid; justify-items: center; font-weight: 700; font-size: 16px; color: var(--titulo); text-decoration: none; line-height: 1.1; }
+.logo span { font-size: 32px; }
+
+/* Abas e paginação (guia 7.4) */
+.barra { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin: 28px 0 20px; }
+.abas { display: flex; gap: 10px; flex-wrap: wrap; }
+.aba {
+  font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; padding: 6px 16px; border-radius: 999px;
+  background: transparent; color: #6B6B6B; border: 1.5px solid var(--cinza-medio);
+}
+.aba:hover { border-color: var(--azul); color: var(--azul); }
+.aba.ativa { background: var(--azul); color: var(--branco); border-color: var(--azul); }
+
+.paginacao { display: flex; gap: 6px; align-items: center; }
+.paginacao button { font: inherit; font-size: 14px; min-width: 32px; height: 32px; border-radius: 8px; border: 0; background: transparent; cursor: pointer; color: var(--texto); }
+.paginacao button[aria-current="page"] { background: var(--azul); color: var(--branco); font-weight: 600; }
+.paginacao button:disabled { color: var(--cinza-medio); cursor: default; }
+
+/* ---------- Cartões (guia 7.2) ---------- */
+.grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 28px; align-items: start; }
+.cartao { position: relative; background: var(--branco); border-radius: var(--raio); box-shadow: var(--sombra); overflow: hidden; text-align: center; padding-bottom: 14px; }
+.cartao .situacao { position: absolute; top: 8px; left: 10px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 5px; background: rgba(255, 255, 255, .9); padding: 1px 8px; border-radius: 999px; }
+.situacao::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--cinza-medio); }
+.situacao.ativo { color: var(--verde); }
+.situacao.ativo::before { background: var(--verde); }
+.situacao.desativado { color: #6B6B6B; }
+.cartao .imagem { height: 150px; background: var(--azul-claro); display: grid; place-items: center; font-size: 64px; }
+.cartao .imagem img { width: 100%; height: 100%; object-fit: cover; }
+.cartao h2 { font-size: 16px; font-weight: 600; color: var(--azul); margin: 12px 8px 4px; overflow-wrap: anywhere; }
+.alertas { font-size: 13px; color: #6B6B6B; display: flex; justify-content: center; align-items: center; gap: 6px; margin-bottom: 10px; }
+.alertas::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--verde); }
+.alertas.tem::before { background: var(--vermelho); }
+
+/* Botões (guia 4) */
+.btn-principal, .btn-sec, .btn-excluir {
+  font: inherit; font-size: 18px; font-weight: 600; height: 46px; padding: 0 28px; border-radius: 999px; cursor: pointer; text-decoration: none;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn-principal { background: var(--azul); color: var(--branco); border: 0; }
+.btn-principal:hover, .btn-principal:active { background: var(--azul-hover); }
+.btn-principal:disabled { background: var(--cinza-claro); color: var(--cinza-medio); cursor: not-allowed; }
+.btn-sec { background: var(--branco); color: var(--azul); border: 2px solid var(--azul); }
+.btn-sec:hover { background: var(--azul-claro); }
+.btn-excluir { background: var(--branco); color: var(--vermelho); border: 2px solid var(--vermelho); }
+.btn-excluir.confirmar { background: var(--vermelho); color: var(--branco); }
+.cartao .btn-principal { width: calc(100% - 40px); }
+.link-editar { display: inline-block; margin-top: 8px; font: inherit; font-size: 16px; font-weight: 600; color: var(--texto); text-decoration: underline; background: 0; border: 0; cursor: pointer; }
+.link-editar:hover { color: var(--azul); }
+
+.cartao.novo { background: transparent; border: 0; box-shadow: none; display: grid; justify-items: center; gap: 8px; padding: 40px 0; font: inherit; font-size: 14px; color: #6B6B6B; cursor: pointer; align-self: center; }
+.novo .mais { width: 56px; height: 56px; border-radius: 14px; background: var(--cinza-claro); display: grid; place-items: center; font-size: 36px; color: #555; box-shadow: 0 3px 6px rgba(0, 0, 0, .2); }
+.novo:hover .mais { background: var(--azul); color: var(--branco); }
+
+.vazio { grid-column: 1 / -1; color: #6B6B6B; }
+
+/* ---------- Diálogo e campos (guia 5) ---------- */
+dialog { border: 0; border-radius: var(--raio); padding: 28px; width: min(440px, 92vw); box-shadow: 0 10px 40px rgba(0, 0, 0, .3); font-family: inherit; }
+dialog::backdrop { background: rgba(31, 41, 55, .55); }
+dialog h2 { font-size: 24px; font-weight: 600; color: var(--titulo); margin-bottom: 18px; }
+.campo { margin-bottom: 16px; }
+.campo label { display: block; font-weight: 600; margin-bottom: 6px; color: var(--titulo); }
+.campo input, .campo select {
+  width: 100%; height: 48px; padding: 0 14px; font: inherit; color: var(--texto); background: var(--branco);
+  border: 1.5px solid #C9C9C9; border-radius: 10px;
+}
+.campo input:focus, .campo select:focus { outline: 0; border-color: var(--azul); box-shadow: 0 0 0 2px var(--azul); }
+.campo input.invalido { border-color: var(--vermelho); }
+.erro { color: var(--vermelho); font-size: 14px; margin-top: 4px; }
+.acoes { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; margin-top: 22px; }
+.acoes .btn-principal, .acoes .btn-sec, .acoes .btn-excluir { font-size: 16px; padding: 0 22px; }
+.acoes .btn-excluir { margin-right: auto; }
+
+/* Mensagens do sistema (guia 7.5) - texto + ícone, nunca só cor */
+.aviso { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--titulo); color: var(--branco); padding: 12px 20px; border-radius: 12px; font-size: 14px; font-weight: 600; box-shadow: var(--sombra); z-index: 10; max-width: 92vw; }
+.aviso.sucesso::before { content: "✓ "; color: #7BE08A; }
+.aviso.erro::before { content: "✕ "; color: #FF8A8A; }
+
+/* ---------- Responsivo ---------- */
+@media (max-width: 760px) {
+  .app { grid-template-columns: 1fr; }
+  .menu { flex-direction: row; flex-wrap: wrap; border-radius: 0 0 var(--raio) var(--raio); padding: 12px; gap: 10px; align-items: center; }
+  .menu nav { order: 3; width: 100%; }
+  .menu ul { grid-auto-flow: column; overflow-x: auto; }
+  .menu .sair { margin: 0 0 0 auto; }
+  .conteudo { padding: 16px; }
+  .logo { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
