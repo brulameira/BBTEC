@@ -1,49 +1,73 @@
-<html lang="pt-br">
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="CSS/style.css">
-    
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login | BBtec</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/login.css">
 </head>
 <body>
-    <div class="topo">
-        <header id="Logo">
-            <img src="img/logo.png" alt="Logo BBtech">
-        </header>
-    </div>
 
-    <div class="container">
-        <aside class="esquerda">
-            <div class="texto">
-                <h1 >Bem-Vindo a BBtech </h1>
-            
-                <p>Organize seus estoques forma simples e eficiente </p>
-            </div>
-            <div class="caixa">
-                <img src="img/caixa.png" alt="">
+  <!-- Barra superior (guia 1.2): logo à esquerda, links à direita -->
+  <header class="barra">
+    <a class="logo" href="../index.html" aria-label="BBtec - página inicial">
+      <img src="../img/logo.png" alt="BBtec">
+    </a>
+    <nav class="links" aria-label="Principal">
+      <a href="cadastro.html">Cadastrar</a>
+      <a href="../index.html">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12 3 2 12h3v8h5v-6h4v6h5v-8h3z"/></svg>
+        Início
+      </a>
+    </nav>
+  </header>
 
-            </div>
-        </aside>
-        
-    
-        <main class="direita">
-            <h2>Acesso sua conta</h2>
-            <form id="form">
-                <div class="campo">
-                    <img src="img/email.svg" alt="">
-                    <label for="email" class="escondido">Email:</label>
-                    <input type="email" name="" id="email" placeholder="Email">
-                </div>
-                <div class="campo">
-                    <img src="img/senha.svg" alt="">
-                    <label for="senha" class="escondido">Senha:</label>
-                    <input type="password" name="" id="senha" placeholder="Senha">
-                </div>
-                <button type="submit" class="btn-entrar">Entrar</button>
+  <div class="painel">
 
-            </form>
-            <a href="#" class="link-senha">Esqueceu sua senha?</a>
-            
-        </main>
-    </div>
+    <!-- Lado esquerdo: boas-vindas -->
+    <section class="esquerda">
+      <div class="texto">
+        <h1>Bem-vindo ao BBtec!</h1>
+        <p>Organize seus estoques de forma simples e eficiente.</p>
+      </div>
+      <svg class="caixa" viewBox="0 0 160 160" fill="none" stroke="#fff" stroke-width="7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
+        <path d="M80 14 140 44v72l-60 30-60-30V44z"/>
+        <path d="M20 44l60 30 60-30M80 74v72"/>
+        <path d="M50 29l60 30v22"/>
+      </svg>
+    </section>
+
+    <!-- Lado direito: formulário (rótulos acima dos campos, guia 5 e 8) -->
+    <main class="direita">
+      <form id="form" class="formulario" novalidate>
+        <h2>Acesse sua conta</h2>
+
+        <div class="campo">
+          <label for="email">E-mail</label>
+          <div class="entrada">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+            <input type="email" id="email" name="email" placeholder="Ex.: nome@email.com" autocomplete="email" required aria-describedby="erro-email">
+          </div>
+          <p class="erro" id="erro-email" hidden></p>
+        </div>
+
+        <div class="campo">
+          <label for="senha">Senha</label>
+          <div class="entrada">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+            <input type="password" id="senha" name="senha" placeholder="Digite sua senha" autocomplete="current-password" required aria-describedby="erro-senha">
+          </div>
+          <p class="erro" id="erro-senha" hidden></p>
+        </div>
+
+        <button type="submit" class="btn-entrar">Entrar</button>
+        <a href="#" class="link-senha">Esqueceu sua senha?</a>
+      </form>
+    </main>
+  </div>
+
+</body>
+</html>
