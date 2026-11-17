@@ -1,6 +1,6 @@
 # BBtec - Sistema de Controle de Estoque
 
-> Projeto de extensão (Parte 2) - COLE_AQUI: curso, disciplina e instituição
+> Projeto de extensão - BBtec: TADS, Desenvolvimento Web 1 e IFSP - Campinas
 
 O **BBtec** é um sistema web de controle de estoque criado para ajudar **pequenas e médias empresas** a organizar seus produtos. Com ele, o usuário cadastra estoques, controla produtos (preço, quantidade, validade e fornecedor) e recebe **alertas automáticos** quando um produto está com estoque baixo ou perto do vencimento.
 
@@ -30,9 +30,9 @@ O **BBtec** é um sistema web de controle de estoque criado para ajudar **pequen
 
 | Nome | GitHub | Responsabilidades |
 |------|--------|-------------------|
-| COLE_AQUI | [@usuario](https://github.com/usuario) | Tela do usuário: estoques, produtos e alertas |
-| COLE_AQUI | [@usuario](https://github.com/usuario) | Login (HTML e CSS) |
-| COLE_AQUI | [@usuario](https://github.com/usuario) | COLE_AQUI |
+| Bruna Cristina | [@brulameira](https://github.com/usuario) | Tela do usuário: estoques, produtos e alertas |
+| Bianca Santos  | [@biasanttz](https://github.com/biasanttz) | Tela Inicial, Tela de Cadastro |
+| COLE_AQUI | [lyhan32](https://github.com/lyhan32) | Tela de Login, HTML, CSS |
 
 ## Problema e objetivo
 
@@ -74,10 +74,11 @@ O BBtec propõe uma interface **simples, organizada e intuitiva** para:
 | Alertas | `html/alertas.html` | Avisos de estoque baixo e validade |
 
 > Os protótipos das telas foram feitos no Canva e estão descritos no Guia Visual do projeto.
+> Tela de Estoque - Prototipo.
+<img width="683" height="434" alt="{4DE67BF6-B93B-478A-8FC4-79901E1859C9}" src="https://github.com/user-attachments/assets/01dc3c30-1ba9-4513-a682-cc930fe65c12" />
 
-<!-- Dica: adicione capturas de tela em img/prints/ e mostre aqui:
-![Tela de estoques](img/prints/estoque.png)
--->
+> Tela de Alertas - Prototipo.
+<img width="677" height="427" alt="{C364F024-487A-4A5B-B8F9-ED15EE9B6494}" src="https://github.com/user-attachments/assets/9f0974b4-ab74-497d-a0ba-b721b601fa88" />
 
 ## Tecnologias
 
