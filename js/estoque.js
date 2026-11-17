@@ -1,4 +1,5 @@
 import { firebaseConfig } from "./firebase-config.js";
+import { contarAlertas } from "./regras-alertas.js";
 
 const POR_PAGINA = 5; // + o cartão "Criar um Estoque" na última página
 const modoDemo = Object.values(firebaseConfig).some(v => v === "COLE_AQUI");
@@ -14,7 +15,8 @@ if (modoDemo) {
     assinar: (cb) => { ouvinte = cb; emitir(); },
     criar: async (e) => { lista.push({ ...e, id: String(Date.now()), alertas: 0 }); emitir(); },
     atualizar: async (id, e) => { lista = lista.map(x => x.id === id ? { ...x, ...e } : x); emitir(); },
-    excluir: async (id) => { lista = lista.filter(x => x.id !== id); emitir(); }
+    excluir: async (id) => { lista = lista.filter(x => x.id !== id); emitir(); },
+    assinarProdutos: (id, cb) => { try { cb(JSON.parse(localStorage.getItem("bbtec_produtos_" + id)) || []); } catch { cb([]); } return () => {}; }
   };
 } else {
   const V = "10.12.2";
@@ -28,7 +30,9 @@ if (modoDemo) {
       () => aviso("Não foi possível carregar os estoques. Verifique sua conexão.", "erro")),
     criar: (e) => fs.addDoc(col, { ...e, alertas: 0, criadoEm: fs.serverTimestamp() }),
     atualizar: (id, e) => fs.updateDoc(fs.doc(db, "estoques", id), e),
-    excluir: (id) => fs.deleteDoc(fs.doc(db, "estoques", id))
+    excluir: (id) => fs.deleteDoc(fs.doc(db, "estoques", id)),
+    assinarProdutos: (id, cb) => fs.onSnapshot(fs.collection(db, "estoques", id, "produtos"),
+      snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))), () => cb([]))
   };
 }
 
@@ -40,6 +44,8 @@ const dlg = $("#dialogo"), form = $("#formEstoque");
 const fNome = $("#fNome"), fImagem = $("#fImagem"), fStatus = $("#fStatus");
 const erroNome = $("#erroNome"), btnExcluir = $("#btnExcluir"), txtExcluir = btnExcluir.querySelector("span");
 const msgExcluir = $("#msgExcluir");
+let contagem = {};
+const ouvintes = {};
 
 $("#usuarioNome").textContent = sessionStorage.getItem("bbtecUsuario") || "Usuario_111";
 $("#usuarioEmail").textContent = sessionStorage.getItem("bbtecEmail") || "Usuario@gmail.com";
@@ -75,7 +81,7 @@ function render() {
   visiveis.forEach(e => {
     const c = document.createElement("article");
     c.className = "cartao";
-    const n = Number(e.alertas) || 0;
+    const n = e.status === "desativado" ? 0 : (contagem[e.id] ?? 0);
     c.innerHTML = `
       <span class="situacao ${e.status}">${e.status === "ativo" ? "Ativo" : "Desativado"}</span>
       <div class="imagem"></div>
@@ -116,7 +122,11 @@ function render() {
     mk("›", pagina + 1, pagina === total, false, "Próxima página");
   }
 
-  $("#pontoAlertas").hidden = !estoques.some(e => e.alertas > 0);
+  const totalAlertas = estoques.reduce((soma, e) => soma + (e.status === "desativado" ? 0 : (contagem[e.id] ?? 0)), 0);
+  const selo = $("#pontoAlertas");
+  selo.hidden = totalAlertas === 0;
+  selo.textContent = totalAlertas > 9 ? "9+" : String(totalAlertas);
+  selo.title = totalAlertas === 1 ? "1 alerta" : `${totalAlertas} alertas`;
 }
 
 /* ---------- Eventos ---------- */
@@ -175,5 +185,12 @@ form.addEventListener("submit", async (ev) => {
   }
 });
 
-dados.assinar(lista => { estoques = lista; render(); });
-if (modoDemo) setTimeout(() => aviso("Modo demonstração: configure o Firebase em js/firebase-config.js", "erro"), 600);
+function sincronizarContagens() {
+  const ids = new Set(estoques.map(e => e.id));
+  Object.keys(ouvintes).filter(id => !ids.has(id)).forEach(id => { ouvintes[id](); delete ouvintes[id]; delete contagem[id]; });
+  estoques.forEach(e => {
+    if (ouvintes[e.id]) return;
+    ouvintes[e.id] = dados.assinarProdutos(e.id, prods => { contagem[e.id] = contarAlertas(prods); render(); });
+  });
+}
+dados.assinar(lista => { estoques = lista; render(); sincronizarContagens(); });
