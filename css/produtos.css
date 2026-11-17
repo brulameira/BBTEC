@@ -1,0 +1,142 @@
+/* BBtec - Tela de produtos. Usa os tokens e componentes de estoque.css */
+dialog {
+    margin: auto;
+}
+
+.confirma {
+    color: var(--vermelho);
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 6px;
+}
+
+.acoes .btn-excluir {
+    white-space: nowrap;
+}
+
+.voltar {
+    font-weight: 600;
+    color: var(--texto);
+    text-decoration: underline;
+}
+
+.voltar:hover {
+    color: var(--azul);
+}
+
+/* Planilha */
+.tabela-area {
+    background: var(--branco);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra);
+    overflow-x: auto;
+}
+
+.tabela {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 520px;
+}
+
+.tabela th,
+.tabela td {
+    padding: 14px 18px;
+    text-align: left;
+    border-bottom: 1px solid var(--cinza-claro);
+}
+
+.tabela thead th {
+    background: var(--azul-claro);
+    color: var(--titulo);
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.tabela .num {
+    text-align: center;
+}
+
+.tabela tbody tr {
+    cursor: pointer;
+}
+
+.tabela tbody tr:hover {
+    background: var(--fundo);
+}
+
+.tabela tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.nome-produto {
+    font: inherit;
+    font-weight: 600;
+    color: var(--azul);
+    background: 0;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    text-align: left;
+    text-decoration: underline;
+    overflow-wrap: anywhere;
+}
+
+.sem-estoque {
+    color: var(--vermelho);
+    font-weight: 600;
+}
+
+.sem-estoque::before {
+    content: "● ";
+}
+
+.vazio {
+    padding: 28px 18px;
+    color: #6B6B6B;
+}
+
+/* Detalhes */
+.detalhes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 18px;
+    margin: 0;
+}
+
+.detalhes .largo {
+    grid-column: 1 / -1;
+}
+
+.detalhes dt {
+    font-size: 14px;
+    color: #6B6B6B;
+}
+
+.detalhes dd {
+    margin: 2px 0 0;
+    font-weight: 600;
+    color: var(--titulo);
+    overflow-wrap: anywhere;
+}
+
+/* Formulário */
+dialog {
+    width: min(520px, 92vw);
+    max-height: 94vh;
+}
+
+.linha {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr;
+    gap: 12px;
+}
+
+@media (max-width: 560px) {
+    .linha {
+        grid-template-columns: 1fr;
+    }
+
+    .detalhes {
+        grid-template-columns: 1fr;
+    }
+}
