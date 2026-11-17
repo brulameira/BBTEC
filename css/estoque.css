@@ -377,14 +377,14 @@ h1 {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--verde);
+  background: #6B6B6B;
 }
 
 .alertas.tem::before {
   background: var(--vermelho);
 }
 
-/* Botões (guia 4) */
+/* Botões */
 .btn-principal,
 .btn-sec,
 .btn-excluir {
@@ -498,7 +498,7 @@ h1 {
   color: #6B6B6B;
 }
 
-/* ---------- Diálogo e campos (guia 5) ---------- */
+/* ---------- Diálogo e campos  ---------- */
 dialog {
   margin: auto;
   border: 0;
