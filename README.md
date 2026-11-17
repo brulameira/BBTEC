@@ -4,7 +4,7 @@
 
 O **BBtec** é um sistema web de controle de estoque criado para ajudar **pequenas e médias empresas** a organizar seus produtos. Com ele, o usuário cadastra estoques, controla produtos (preço, quantidade, validade e fornecedor) e recebe **alertas automáticos** quando um produto está com estoque baixo ou perto do vencimento.
 
-🔗 **Site publicado:** COLE_AQUI_A_URL_DA_HOSPEDAGEM
+🔗 **Site publicado:** colar link do site
 
 ---
 
@@ -164,10 +164,21 @@ Cuidados de acessibilidade:
 
 1. Clone o repositório:
    ```bash
-   git clone https://github.com/COLE_AQUI/BBTEC.git
+   git clone https://github.com/brulameira/BBTEC.git
    ```
 2. Crie um projeto no [Firebase Console](https://console.firebase.google.com), ative o **Firestore** e registre um app **Web**.
-3. Copie a configuração do app para `js/firebase-config.js`.
+3.
+```
+    export const firebaseConfig = {
+      apiKey: "AIzaSyBF1-k3atEVoaUnbrR-ELNuKTrJaxHhxeE",
+      authDomain: "bbtec-fd1d0.firebaseapp.com",
+      projectId: "bbtec-fd1d0",
+      storageBucket: "bbtec-fd1d0.firebasestorage.app",
+      messagingSenderId: "442659819439",
+      appId: "1:442659819439:web:99badaa103e02dfb34695a"
+  
+    };
+```
 4. No Firestore, em **Regras**, publique:
    ```
    rules_version = '2';
