@@ -39,6 +39,7 @@ const grade = $("#grade"), contador = $("#contador"), paginacao = $("#paginacao"
 const dlg = $("#dialogo"), form = $("#formEstoque");
 const fNome = $("#fNome"), fImagem = $("#fImagem"), fStatus = $("#fStatus");
 const erroNome = $("#erroNome"), btnExcluir = $("#btnExcluir"), txtExcluir = btnExcluir.querySelector("span");
+const msgExcluir = $("#msgExcluir");
 
 $("#usuarioNome").textContent = sessionStorage.getItem("bbtecUsuario") || "Usuario_111";
 $("#usuarioEmail").textContent = sessionStorage.getItem("bbtecEmail") || "Usuario@gmail.com";
@@ -134,17 +135,25 @@ function abrir(estoque) {
   btnExcluir.hidden = !estoque; resetExcluir(); limparErro();
   dlg.showModal(); fNome.focus();
 }
-function limparErro() { erroNome.hidden = true; fNome.classList.remove("invalido"); }
-function resetExcluir() { btnExcluir.classList.remove("confirmar"); txtExcluir.textContent = "Excluir"; }
+function limparErro() { 
+  erroNome.hidden = true; 
+  fNome.classList.remove("invalido"); 
+}
+function resetExcluir() {
+  btnExcluir.classList.remove("confirmar");
+  txtExcluir.textContent = "Excluir";
+  msgExcluir.hidden = true;
+}
 
 $("#btnCancelar").addEventListener("click", () => dlg.close());
 
 btnExcluir.addEventListener("click", async () => {
-  if (!btnExcluir.classList.contains("confirmar")) { // confirmação (guia 7.5)
-    btnExcluir.classList.add("confirmar");
-    txtExcluir.textContent = "Deseja realmente excluir? Clique para confirmar";
-    return;
-  }
+ if (!btnExcluir.classList.contains("confirmar")) { // confirmação (guia 7.5)
+  btnExcluir.classList.add("confirmar");
+  txtExcluir.textContent = "Confirmar exclusão";
+  msgExcluir.hidden = false;
+  return;
+}
   try { await dados.excluir(editandoId); dlg.close(); aviso("Estoque excluído com sucesso!"); }
   catch { aviso("Não foi possível excluir o estoque. Tente novamente.", "erro"); }
 });
