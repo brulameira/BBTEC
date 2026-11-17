@@ -1,6 +1,8 @@
 import { firebaseConfig } from "./firebase-config.js";
 
 const estoqueId = new URLSearchParams(location.search).get("estoque");
+const veioDosAlertas = new URLSearchParams(location.search).get("origem") === "alertas";
+const voltarParaAlertas = () => { if (veioDosAlertas) location.href = "alertas.html"; };
 const modoDemo = Object.values(firebaseConfig).some(v => v === "COLE_AQUI"); // observa se esta no modo demo.
 const $ = (s) => document.querySelector(s);
 
@@ -110,14 +112,14 @@ function detalhes(p) {
   $("#dCodigo").textContent = p.codigo;
   $("#dPreco").textContent = brl.format(p.preco);
   $("#dQtd").textContent = Number(p.quantidade) === 0 ? "0 (sem estoque)" : p.quantidade;
-  $("#dValidade").textContent = p.validade ? new Date(p.validade).toLocaleDateString("pt-BR") : "/";
+  $("#dValidade").textContent = p.validade ? p.validade.split("-").reverse().join("/") : "/";
   $("#dFornecedor").textContent = p.fornecedor || "-";
   $("#dEndereco").textContent = p.endereco || "-";
   resetExcluir();
   dlgDetalhe.showModal();
 }
 
-$("#btnFechar").addEventListener("click", () => dlgDetalhe.close());
+$("#btnFechar").addEventListener("click", () => { dlgDetalhe.close(); voltarParaAlertas(); });
 $("#btnEditar").addEventListener("click", () => { dlgDetalhe.close(); abrirForm(atual); });
 
 btnExcluir.addEventListener("click", async () => {
@@ -125,7 +127,7 @@ btnExcluir.addEventListener("click", async () => {
     btnExcluir.classList.add("confirmar"); txtExcluir.textContent = "Confirmar exclusão"; msgExcluir.hidden = false;
     return;
   }
-  try { await dados.excluir(atual.id); dlgDetalhe.close(); aviso("Produto excluído com sucesso!"); }
+  try { await dados.excluir(atual.id); dlgDetalhe.close(); aviso("Produto excluído com sucesso!"); setTimeout(voltarParaAlertas, 1200); }
   catch { aviso("Não foi possível excluir o produto. Tente novamente.", "erro"); }
 });
 
@@ -146,7 +148,7 @@ function abrirForm(p) {
   campos.fornecedor.value = p?.fornecedor ?? "";
   campos.endereco.value = p?.endereco ?? "";
   limparErros();
-  dlgForm.showModal(); campos.nome.focus();
+   dlgForm.showModal(); campos.nome.focus();
 }
 $("#btnNovo").addEventListener("click", () => abrirForm());
 $("#btnCancelar").addEventListener("click", () => dlgForm.close());
@@ -190,7 +192,7 @@ form.addEventListener("submit", async (ev) => {
   const novo = !atual;
   try {
     if (novo) await dados.criar(payload); else await dados.atualizar(atual.id, payload);
-    dlgForm.close(); aviso(novo ? "Produto cadastrado com sucesso!" : "Produto atualizado com sucesso!");
+    dlgForm.close(); aviso(novo ? "Produto cadastrado com sucesso!" : "Produto atualizado com sucesso!"); setTimeout(voltarParaAlertas, 1200);
   } catch {
     aviso("Não foi possível salvar o produto. Verifique os campos preenchidos.", "erro");
   }
@@ -199,4 +201,8 @@ form.addEventListener("submit", async (ev) => {
 $("#busca").addEventListener("input", e => { termo = e.target.value.trim(); render(); });
 $("#formBusca").addEventListener("submit", e => e.preventDefault());
 
-dados.assinar(lista => { produtos = lista; render(); });
+let abrirDaUrl = new URLSearchParams(location.search).get("produto");
+dados.assinar(lista => {
+  produtos = lista; render();
+  if (abrirDaUrl) { const p = produtos.find(x => x.id === abrirDaUrl); abrirDaUrl = null; if (p) detalhes(p); }
+});

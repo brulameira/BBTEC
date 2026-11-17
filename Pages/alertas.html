@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Alertas | BBtec</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/estoque.css">
+  <link rel="stylesheet" href="../css/alertas.css">
+</head>
+<body>
+  <div class="app">
+
+    <aside class="menu" aria-label="Menu principal">
+      <div class="menu-usuario">
+        <span class="avatar" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="#fff"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7z"/></svg>
+        </span>
+        <div>
+          <strong id="usuarioNome">Usuario_111</strong>
+          <small id="usuarioEmail">Usuario@gmail.com</small>
+        </div>
+      </div>
+
+      <nav>
+        <ul>
+          <li><a href="estoque.html">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg>
+            Estoque</a></li>
+          <li><a href="alertas.html" class="ativo" aria-current="page">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 22a2.5 2.5 0 0 0 2.5-2.5h-5A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 0 0-5-6.7V3a2 2 0 0 0-4 0v1.3A7 7 0 0 0 5 11v5l-2 2v1h18v-1z"/></svg>
+            Alertas <span class="ponto" id="pontoAlertas" hidden></span></a></li>
+          <li><a href="configuracao.html">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3h-4l-.4 2.9a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1L11 21h4l.4-2.9a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg>
+            Configuração</a></li>
+          <li><a href="perfil.html">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><circle cx="12" cy="7.5" r="4.5"/><path d="M3.5 22c0-5 3.8-8 8.5-8s8.5 3 8.5 8z"/></svg>
+            Perfil</a></li>
+        </ul>
+      </nav>
+
+      <a href="login.html" class="sair">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4H5v16h5M9 12h12M17 8l4 4-4 4"/></svg>
+        SAIR</a>
+    </aside>
+
+    <main class="conteudo">
+      <header class="topo">
+        <div class="titulo-alertas">
+          <svg viewBox="0 0 24 24" width="40" height="40" aria-hidden="true"><path d="M12 2.5 1.5 21h21z" fill="#FF7A00"/><path d="M12 9v6M12 17.6v.4" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+          <div>
+            <h1>Alertas</h1>
+            <p id="contador" aria-live="polite">Carregando...</p>
+          </div>
+        </div>
+        <a class="logo" aria-label="BBtec - página inicial"><img src="../img/logo.png" alt="BBtec"></a>
+      </header>
+
+      <div class="barra">
+        <div class="abas" role="tablist" aria-label="Filtrar alertas por tipo">
+          <button role="tab" class="aba ativa" data-filtro="todos" aria-selected="true">Todos</button>
+          <button role="tab" class="aba" data-filtro="estoque" aria-selected="false">Estoque baixo</button>
+          <button role="tab" class="aba" data-filtro="validade" aria-selected="false">Validade</button>
+        </div>
+      </div>
+
+      <section class="lista" id="lista" aria-label="Lista de alertas"></section>
+    </main>
+  </div>
+
+  <script type="module" src="../js/alertas.js"></script>
+</body>
+</html>
