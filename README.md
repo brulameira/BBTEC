@@ -1,2 +1,0 @@
-# BBTEC
-Projeto de Extensão
