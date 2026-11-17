@@ -33,13 +33,13 @@ body { min-height: 100vh; display: flex; flex-direction: column; font-family: 'P
 .texto, .caixa { position: relative; z-index: 1; }
 .texto h1 { font-size: 32px; font-weight: 700; line-height: 1.25; margin-bottom: 12px; }
 .texto p { font-size: 18px; max-width: 360px; }
-.caixa { width: 500px; height: 500px; }
+.caixa { width: 150px; height: 150px; }
 
 .direita { display: flex; align-items: center; justify-content: center; padding: 48px 32px; background: var(--branco); }
 .formulario { width: 100%; max-width: 440px; }
 .formulario h2 { font-size: 24px; font-weight: 600; color: var(--titulo); text-align: center; margin-bottom: 28px; }
 
-/* ---------- Campos ---------- */
+/* ---------- Campos (guia 5) ---------- */
 .campo { margin-bottom: 18px; }
 .campo label { display: block; font-weight: 600; margin-bottom: 6px; color: var(--titulo); }
 .entrada { position: relative; }
