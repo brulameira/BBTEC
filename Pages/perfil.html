@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Perfil | BBtec</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/estoque.css">
+  <link rel="stylesheet" href="../css/paginas.css">
+</head>
+<body>
+  <div class="app">
+
+    <aside class="menu" aria-label="Menu principal">
+      <div class="menu-usuario">
+        <span class="avatar" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="#fff"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7z"/></svg>
+        </span>
+        <div>
+          <strong id="usuarioNome">Usuario</strong>
+          <small id="usuarioEmail"></small>
+        </div>
+      </div>
+
+      <nav>
+        <ul>
+          <li><a href="estoque.html">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg>
+            Estoque</a></li>
+          <li><a href="alertas.html">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 22a2.5 2.5 0 0 0 2.5-2.5h-5A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 0 0-5-6.7V3a2 2 0 0 0-4 0v1.3A7 7 0 0 0 5 11v5l-2 2v1h18v-1z"/></svg>
+            Alertas</a></li>
+          <li><a href="relatorios.html">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+            Relatórios</a></li>
+          <li><a href="configuracao.html">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3h-4l-.4 2.9a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1L11 21h4l.4-2.9a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg>
+            Configuração</a></li>
+          <li><a href="perfil.html" class="ativo" aria-current="page">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><circle cx="12" cy="7.5" r="4.5"/><path d="M3.5 22c0-5 3.8-8 8.5-8s8.5 3 8.5 8z"/></svg>
+            Perfil</a></li>
+        </ul>
+      </nav>
+
+      <a href="login.html" class="sair">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4H5v16h5M9 12h12M17 8l4 4-4 4"/></svg>
+        SAIR</a>
+    </aside>
+
+    <main class="conteudo">
+      <header class="topo">
+        <div class="titulo">
+          <h1>Perfil</h1>
+          <p>Seus dados e informações da conta</p>
+        </div>
+        <a class="logo" href="../index.html" aria-label="BBtec - página inicial"><img src="../img/logo.png" alt="BBtec"></a>
+      </header>
+
+      <section class="painel-card" aria-labelledby="tDados">
+        <div class="perfil-topo">
+          <span class="avatar-grande" id="iniciais" aria-hidden="true">?</span>
+          <div>
+            <h2 id="tDados">Meus dados</h2>
+            <p class="subtexto">Estas informações ficam salvas na sua conta.</p>
+          </div>
+        </div>
+
+        <form id="formPerfil" novalidate>
+          <div class="campo">
+            <label for="nome">Nome completo</label>
+            <input type="text" id="nome" maxlength="80" autocomplete="name">
+            <p class="erro" id="erroNome" role="alert" hidden></p>
+          </div>
+
+          <div class="campo">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" disabled>
+            <p class="dica">O e-mail não pode ser alterado por aqui.</p>
+          </div>
+
+          <div class="linha-2">
+            <div class="campo">
+              <label for="empresa">Empresa</label>
+              <input type="text" id="empresa" maxlength="80" autocomplete="organization">
+            </div>
+            <div class="campo">
+              <label for="cargo">Cargo</label>
+              <input type="text" id="cargo" maxlength="80" autocomplete="organization-title">
+            </div>
+          </div>
+
+          <div class="acoes-form">
+            <button type="submit" class="btn-principal" id="btnSalvar">Salvar alterações</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="painel-card" aria-labelledby="tConta">
+        <h2 id="tConta">Conta e segurança</h2>
+        <dl class="dados-conta">
+          <div><dt>Forma de acesso</dt><dd id="metodo">-</dd></div>
+          <div><dt>Conta criada em</dt><dd id="desde">-</dd></div>
+        </dl>
+        <div id="blocoSenha">
+          <p class="subtexto">Para trocar a senha, enviamos um link seguro para o seu e-mail.</p>
+          <button type="button" class="btn-sec" id="btnSenha">Enviar link para redefinir a senha</button>
+        </div>
+        <p class="subtexto" id="avisoGoogle" hidden>Você entra com a conta do Google, então a senha é gerenciada por ela.</p>
+      </section>
+    </main>
+  </div>
+
+  <div class="aviso" id="aviso" role="status" aria-live="polite" hidden></div>
+
+  <script type="module" src="../js/perfil.js"></script>
+</body>
+</html>
