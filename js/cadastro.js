@@ -1,6 +1,6 @@
 /* BBtec - Cadastro: validação, força da senha e criação da conta no Firebase Authentication.
    O perfil (sem senha) é salvo no Firestore, em usuarios/{uid}. */
-import { auth, firebaseConfigurado, createUserWithEmailAndPassword, updateProfile, garantirPerfil, lembrarUsuario } from "./firebase-app.js";
+import { auth, firebaseConfigurado, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, updateProfile, garantirPerfil, lembrarUsuario } from "./firebase-app.js";
 
 const DESTINO = "estoque.html"; // para onde ir depois de cadastrar
 
@@ -192,4 +192,52 @@ const DESTINO = "estoque.html"; // para onde ir depois de cadastrar
       botao.disabled = false;
     }
   });
+
+  /* ---------- Cadastro com o Google ----------
+     Na primeira vez o Firebase cria a conta; se a conta já existir, apenas entra. */
+  function mostrarErroGoogle(msg) {
+    const p = $("erro-google");
+    if (!p) { if (msg) console.warn(msg); return; }
+    p.textContent = msg || "";
+    p.hidden = !msg;
+  }
+
+  function mensagemGoogle(erro) {
+    switch (erro && erro.code) {
+      case "auth/unauthorized-domain": return "Este endereço não está autorizado no Firebase. Abra o site por localhost ou adicione o domínio em Authentication > Configurações.";
+      case "auth/popup-blocked": return "O navegador bloqueou a janela do Google. Permita pop-ups e tente de novo.";
+      case "auth/network-request-failed": return "Sem conexão. Verifique a internet e tente novamente.";
+      case "auth/operation-not-allowed": return "O login com Google não está ativado no Firebase.";
+      default: return "Não foi possível continuar com o Google. Tente novamente.";
+    }
+  }
+
+  const botaoGoogle = $("btn-google");
+  if (botaoGoogle) {
+    botaoGoogle.addEventListener("click", async () => {
+      if (redirecionando) return;
+      mostrarErroGoogle("");
+      if (!validar("termos")) { campos.termos.focus(); return; } // os termos valem também para o cadastro com Google
+      if (!firebaseConfigurado) { mostrarErroGoogle("Firebase não configurado. Preencha o arquivo js/firebase-config.js."); return; }
+
+      botaoGoogle.disabled = true;
+      try {
+        const cred = await signInWithPopup(auth, new GoogleAuthProvider());
+        try {
+          await garantirPerfil(cred.user, { empresa: $("empresa").value.trim(), cargo: $("cargo").value.trim() });
+        } catch (e) {
+          console.warn("Conta criada, mas o perfil não foi salvo:", e);
+        }
+        lembrarUsuario(cred.user);
+        redirecionando = true;
+        location.href = DESTINO;
+      } catch (erro) {
+        // Fechar a janela do Google não é erro: não mostra nada
+        if (erro.code !== "auth/popup-closed-by-user" && erro.code !== "auth/cancelled-popup-request") {
+          mostrarErroGoogle(mensagemGoogle(erro));
+        }
+        botaoGoogle.disabled = false;
+      }
+    });
+  }
 })();

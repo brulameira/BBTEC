@@ -1,5 +1,5 @@
-/* Inicialização única do Firebase (Auth + Firestore) para as telas de login e cadastro.
-   A versão do SDK fica só aqui. Importe o que precisar a partir deste arquivo. */
+/* Inicialização única do Firebase (Auth + Firestore). A versão do SDK fica só aqui.
+   Todas as telas importam o que precisam a partir deste arquivo. */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -16,8 +16,12 @@ export {
   GoogleAuthProvider, sendPasswordResetEmail, updateProfile, onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-/* Cria o perfil em usuarios/{uid} se ainda não existir.
-   Nunca grava senha: ela fica só no Firebase Authentication. */
+export {
+  doc, getDoc, setDoc, serverTimestamp,
+  collection, query, where, onSnapshot, getDocs, addDoc, updateDoc, deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* Cria o perfil em usuarios/{uid} se ainda não existir. Nunca grava senha. */
 export async function garantirPerfil(usuario, extra = {}) {
   const ref = doc(db, "usuarios", usuario.uid);
   const existente = await getDoc(ref);

@@ -1,9 +1,10 @@
-import { firebaseConfig } from "./firebase-config.js";
+import { db, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDoc, serverTimestamp } from "./firebase-app.js";
+import { exigirLogin } from "./sessao.js";
 
-const estoqueId = new URLSearchParams(location.search).get("estoque");
-const veioDosAlertas = new URLSearchParams(location.search).get("origem") === "alertas";
+const params = new URLSearchParams(location.search);
+const estoqueId = params.get("estoque");
+const veioDosAlertas = params.get("origem") === "alertas";
 const voltarParaAlertas = () => { if (veioDosAlertas) location.href = "alertas.html"; };
-const modoDemo = Object.values(firebaseConfig).some(v => v === "COLE_AQUI"); // observa se esta no modo demo.
 const $ = (s) => document.querySelector(s);
 
 function aviso(msg, tipo = "sucesso") {
@@ -12,44 +13,40 @@ function aviso(msg, tipo = "sucesso") {
   clearTimeout(aviso.t); aviso.t = setTimeout(() => el.hidden = true, 3500);
 }
 
-if (!estoqueId) {
+function semAcesso(texto) {
   $("#contador").textContent = "";
   $("#btnNovo").hidden = true;
   $("#vazio").hidden = false;
-  $("#vazio").innerHTML = 'Nenhum estoque selecionado. <a href="estoque.html">Volte aos estoques</a> e clique em "Visualizar".';
+  $("#vazio").innerHTML = texto;
+}
+
+await exigirLogin(); // sem login, a página volta para o login
+
+if (!estoqueId) {
+  semAcesso('Nenhum estoque selecionado. <a href="estoque.html">Volte aos estoques</a> e clique em "Visualizar".');
   throw new Error("Estoque não informado na URL");
 }
 
-/* ---------- Dados: Firestore (estoques/{id}/produtos) ou demonstração (localStorage) ---------- */
-let dados;
-if (modoDemo) {
-  const chave = "bbtec_produtos_" + estoqueId;
-  const ler = () => { try { return JSON.parse(localStorage.getItem(chave)) || []; } catch { return []; } };
-  let ouvinte = () => { };
-  const gravar = (l) => { try { localStorage.setItem(chave, JSON.stringify(l)); } catch { } ouvinte(l); };
-  dados = {
-    nomeEstoque: async () => "Estoque",
-    assinar: (cb) => { ouvinte = cb; cb(ler()); },
-    criar: async (p) => gravar([...ler(), { ...p, id: String(Date.now()) }]),
-    atualizar: async (id, p) => gravar(ler().map(x => x.id === id ? { ...x, ...p } : x)),
-    excluir: async (id) => gravar(ler().filter(x => x.id !== id))
-  };
-} else {
-  const V = "10.12.2";
-  const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`);
-  const fs = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`);
-  const db = fs.getFirestore(initializeApp(firebaseConfig));
-  const col = fs.collection(db, "estoques", estoqueId, "produtos");
-  dados = {
-    nomeEstoque: async () => { const s = await fs.getDoc(fs.doc(db, "estoques", estoqueId)); return s.exists() ? s.data().nome : "Estoque"; },
-    assinar: (cb) => fs.onSnapshot(col,
-      snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
-      () => aviso("Não foi possível carregar os produtos. Verifique sua conexão.", "erro")),
-    criar: (p) => fs.addDoc(col, { ...p, criadoEm: fs.serverTimestamp() }),
-    atualizar: (id, p) => fs.updateDoc(fs.doc(db, "estoques", estoqueId, "produtos", id), p),
-    excluir: (id) => fs.deleteDoc(fs.doc(db, "estoques", estoqueId, "produtos", id))
-  };
+/* ---------- Dados: estoques/{id}/produtos (só o dono do estoque tem acesso) ---------- */
+let nomeDoEstoque = "Estoque";
+try {
+  const s = await getDoc(doc(db, "estoques", estoqueId));
+  if (!s.exists()) throw new Error("inexistente");
+  nomeDoEstoque = s.data().nome || "Estoque";
+} catch {
+  semAcesso('Estoque não encontrado ou sem permissão de acesso. <a href="estoque.html">Volte aos estoques</a>.');
+  throw new Error("Sem acesso ao estoque");
 }
+
+const col = collection(db, "estoques", estoqueId, "produtos");
+const dados = {
+  assinar: (cb) => onSnapshot(col,
+    snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
+    () => aviso("Não foi possível carregar os produtos. Verifique sua conexão.", "erro")),
+  criar: (p) => addDoc(col, { ...p, criadoEm: serverTimestamp() }),
+  atualizar: (id, p) => updateDoc(doc(db, "estoques", estoqueId, "produtos", id), p),
+  excluir: (id) => deleteDoc(doc(db, "estoques", estoqueId, "produtos", id))
+};
 
 /* ---------- Estado e elementos ---------- */
 let produtos = [], termo = "", atual = null; // atual = produto aberto nos detalhes / em edição
@@ -59,9 +56,10 @@ const dlgDetalhe = $("#dlgDetalhe"), dlgForm = $("#dlgForm"), form = $("#formPro
 const btnExcluir = $("#btnExcluir"), txtExcluir = btnExcluir.querySelector("span"), msgExcluir = $("#msgExcluir");
 const campos = { nome: $("#fNome"), codigo: $("#fCodigo"), preco: $("#fPreco"), validade: $("#fValidade"), quantidade: $("#fQtd"), fornecedor: $("#fFornecedor"), endereco: $("#fEndereco") };
 
-$("#usuarioNome").textContent = sessionStorage.getItem("bbtecUsuario") || "Usuario_111";
-$("#usuarioEmail").textContent = sessionStorage.getItem("bbtecEmail") || "Usuario@gmail.com";
-dados.nomeEstoque().then(n => { $("#tituloEstoque").textContent = n; document.title = n + " | BBtec"; }).catch(() => { });
+$("#tituloEstoque").textContent = nomeDoEstoque;
+document.title = nomeDoEstoque + " | BBtec";
+
+const dataBR = (v) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v)) ? v.slice(0, 10).split("-").reverse().join("/") : "/";
 
 /* ---------- Planilha ---------- */
 function render() {
@@ -81,15 +79,7 @@ function render() {
     tdNome.append(b);
     const tdCod = document.createElement("td"); tdCod.textContent = p.codigo;
     const tdPreco = document.createElement("td"); tdPreco.className = "num"; tdPreco.textContent = brl.format(p.preco);
-
-    const tdValidade = document.createElement("td");
-    if (p.validade) {
-      const [ano, mes, dia] = p.validade.split("-");
-      tdValidade.textContent = `${dia}/${mes}/${ano}`;
-    } else {
-      tdValidade.textContent = "/";
-    }
-
+    const tdValidade = document.createElement("td"); tdValidade.textContent = dataBR(p.validade);
     const tdQtd = document.createElement("td"); tdQtd.className = "num";
     if (Number(p.quantidade) === 0) { tdQtd.innerHTML = '<span class="sem-estoque">Sem estoque</span>'; }
     else tdQtd.textContent = p.quantidade;
@@ -112,7 +102,7 @@ function detalhes(p) {
   $("#dCodigo").textContent = p.codigo;
   $("#dPreco").textContent = brl.format(p.preco);
   $("#dQtd").textContent = Number(p.quantidade) === 0 ? "0 (sem estoque)" : p.quantidade;
-  $("#dValidade").textContent = p.validade ? p.validade.split("-").reverse().join("/") : "/";
+  $("#dValidade").textContent = dataBR(p.validade);
   $("#dFornecedor").textContent = p.fornecedor || "-";
   $("#dEndereco").textContent = p.endereco || "-";
   resetExcluir();
@@ -148,7 +138,7 @@ function abrirForm(p) {
   campos.fornecedor.value = p?.fornecedor ?? "";
   campos.endereco.value = p?.endereco ?? "";
   limparErros();
-   dlgForm.showModal(); campos.nome.focus();
+  dlgForm.showModal(); campos.nome.focus();
 }
 $("#btnNovo").addEventListener("click", () => abrirForm());
 $("#btnCancelar").addEventListener("click", () => dlgForm.close());
@@ -201,7 +191,7 @@ form.addEventListener("submit", async (ev) => {
 $("#busca").addEventListener("input", e => { termo = e.target.value.trim(); render(); });
 $("#formBusca").addEventListener("submit", e => e.preventDefault());
 
-let abrirDaUrl = new URLSearchParams(location.search).get("produto");
+let abrirDaUrl = params.get("produto"); // vindo da tela de alertas: abre o produto direto
 dados.assinar(lista => {
   produtos = lista; render();
   if (abrirDaUrl) { const p = produtos.find(x => x.id === abrirDaUrl); abrirDaUrl = null; if (p) detalhes(p); }
