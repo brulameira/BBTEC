@@ -63,6 +63,19 @@ O BBtec propõe uma interface **simples, organizada e intuitiva** para:
 - Ao clicar no produto: ver os detalhes, editar ou excluir (com confirmação).
 - Busca por nome ou código e validação dos campos (por exemplo, não permite código repetido).
 
+**Entradas e saídas**
+- Nos detalhes do produto: registrar entrada ou saída, com quantidade e motivo (a saída não pode passar do saldo).
+- Cadastro, ajuste de quantidade na edição e exclusão de produto também entram no histórico.
+
+**Relatórios**
+- Resumo do estoque: total de estoques, produtos, unidades, valor em estoque e produtos com alerta, com a situação de cada produto.
+- Histórico de movimentações: filtro por estoque, tipo, período e busca.
+- Exportação da planilha em CSV (abre no Excel) e impressão ou PDF.
+
+**Perfil e configurações**
+- Editar nome, empresa e cargo; redefinir a senha por e-mail.
+- Configurar quando avisar: limite de estoque baixo e dias de antecedência da validade, ou desligar cada tipo de aviso.
+
 **Alertas**
 - Avisos de **estoque baixo** (ou sem estoque) e de **validade próxima** (ou produto vencido).
 - Filtro por tipo de alerta.
@@ -74,10 +87,14 @@ O BBtec propõe uma interface **simples, organizada e intuitiva** para:
 | Tela | Arquivo | Descrição |
 |------|---------|-----------|
 | Início | `index.html` | Apresentação do sistema |
+| Cadastro | `html/cadastro.html` | Criação de conta |
 | Login | `html/login.html` | Acesso com e-mail e senha ou com o Google |
 | Estoques | `html/estoque.html` | Lista de estoques do usuário |
 | Produtos | `html/produtos.html` | Planilha de produtos de um estoque |
 | Alertas | `html/alertas.html` | Avisos de estoque baixo e validade |
+| Relatórios | `html/relatorios.html` | Resumo do estoque, histórico de movimentações e exportação |
+| Configuração | `html/configuracao.html` | Regras de alerta de cada usuário |
+| Perfil | `html/perfil.html` | Dados pessoais e segurança da conta |
 
 > Os protótipos das telas foram feitos no Canva e estão descritos no Guia Visual do projeto.
 > Tela de Estoque - Prototipo.
@@ -104,14 +121,18 @@ BBTEC/
 │   ├── cadastro.html
 │   ├── estoque.html
 │   ├── produtos.html
-│   └── alertas.html
+│   ├── alertas.html
+│   ├── relatorios.html
+│   ├── configuracao.html
+│   └── perfil.html
 ├── css/                    # Estilos de cada tela
 │   ├── style.css
 │   ├── login.css
 │   ├── cadastro.css
 │   ├── estoque.css
 │   ├── produtos.css
-│   └── alertas.css
+│   ├── alertas.css
+│   └── paginas.css
 ├── js/                     # Lógica das telas e do Firebase
 │   ├── firebase-config.js  # Configuração do projeto Firebase
 │   ├── firebase-app.js     # Inicialização do Firebase (Auth + Firestore)
@@ -121,7 +142,10 @@ BBTEC/
 │   ├── cadastro.js
 │   ├── estoque.js
 │   ├── produtos.js
-│   └── alertas.js
+│   ├── alertas.js
+│   ├── relatorios.js
+│   ├── configuracao.js
+│   └── perfil.js
 ├── img/                    # Logo e imagens
 └── README.md
 ```
@@ -137,6 +161,7 @@ usuarios (coleção)
     ├── email: "usuario@email.com"
     ├── empresa: "Minha Empresa"
     ├── cargo: "Gerente"
+    ├── config: { limiteEstoqueBaixo: 5, diasVencimento: 7, alertaEstoque: true, alertaValidade: true }
     └── criadoEm: timestamp
 
 estoques (coleção)
@@ -146,15 +171,25 @@ estoques (coleção)
     ├── imagem: "https://..." ou imagem em texto (data URL)
     ├── donoId: "{uid do usuário dono}"
     ├── criadoEm: timestamp
-    └── produtos (subcoleção)
-        └── {idDoProduto} (documento)
-            ├── nome: "Detergente"
-            ├── codigo: "DET-001"
-            ├── preco: 13.00
-            ├── quantidade: 10
-            ├── validade: "2026-12-10"
-            ├── fornecedor: "Distribuidora Limpa Bem"
-            └── endereco: "Rua Exemplo, 100, Centro"
+    ├── produtos (subcoleção)
+    │   └── {idDoProduto} (documento)
+    │       ├── nome: "Detergente"
+    │       ├── codigo: "DET-001"
+    │       ├── preco: 13.00
+    │       ├── quantidade: 10
+    │       ├── validade: "2026-12-10"
+    │       ├── fornecedor: "Distribuidora Limpa Bem"
+    │       └── endereco: "Rua Exemplo, 100, Centro"
+    └── movimentacoes (subcoleção: histórico de entradas e saídas)
+        └── {idDaMovimentacao} (documento)
+            ├── produtoId, produtoNome, produtoCodigo
+            ├── tipo: "entrada" | "saida"
+            ├── quantidade: 3
+            ├── saldoAnterior: 10
+            ├── saldoNovo: 7
+            ├── motivo: "Venda"
+            ├── usuarioNome: "Bruna Cristina"
+            └── data: timestamp
 ```
 ## Regras de segurança do Firestore
 Cada usuário acessa só o próprio perfil e os próprios estoques (e os produtos deles):
@@ -175,6 +210,12 @@ service cloud.firestore {
 
       match /produtos/{produto} {
         allow read, write: if request.auth != null
+          && get(/databases/$(database)/documents/estoques/$(id)).data.donoId == request.auth.uid;
+      }
+
+      // Histórico: pode ser lido e criado, mas não editado
+      match /movimentacoes/{mov} {
+        allow read, create, delete: if request.auth != null
           && get(/databases/$(database)/documents/estoques/$(id)).data.donoId == request.auth.uid;
       }
     }
@@ -239,8 +280,7 @@ firebase deploy
 
 O histórico de commits e de pull requests mostra o desenvolvimento incremental feito por toda a equipe.
 
-## Próximos passos
+## Futuros passos
 
-- Telas de perfil e configurações.
-- Histórico de entradas e saídas de produtos.
-- Relatórios e exportação da planilha.
+- Gráficos nos relatórios.
+- Estoque compartilhado entre vários usuários da mesma empresa.
