@@ -46,6 +46,12 @@ O BBtec propõe uma interface **simples, organizada e intuitiva** para:
 
 ## Funcionalidades
 
+**Contas e acesso**
+- Cadastro com validação dos campos e indicador de força da senha.
+- Login com e-mail e senha ou com o Google, e recuperação de senha por e-mail.
+- Telas do sistema protegidas: quem não está logado volta para o login, e o botão SAIR encerra a sessão.
+- Cada usuário vê e altera apenas os seus estoques.
+
 **Estoques**
 - Listar os estoques em cartões, com foto, situação (ativo ou desativado) e quantidade de alertas.
 - Buscar por nome, filtrar (todos, ativos, desativados) e paginar.
@@ -68,7 +74,7 @@ O BBtec propõe uma interface **simples, organizada e intuitiva** para:
 | Tela | Arquivo | Descrição |
 |------|---------|-----------|
 | Início | `index.html` | Apresentação do sistema |
-| Login | `html/login.html` | Acesso à conta |
+| Login | `html/login.html` | Acesso com e-mail e senha ou com o Google |
 | Estoques | `html/estoque.html` | Lista de estoques do usuário |
 | Produtos | `html/produtos.html` | Planilha de produtos de um estoque |
 | Alertas | `html/alertas.html` | Avisos de estoque baixo e validade |
@@ -95,18 +101,24 @@ BBTEC/
 ├── index.html              # Tela inicial
 ├── html/                   # Telas do sistema
 │   ├── login.html
+│   ├── cadastro.html
 │   ├── estoque.html
 │   ├── produtos.html
 │   └── alertas.html
 ├── css/                    # Estilos de cada tela
 │   ├── style.css
 │   ├── login.css
+│   ├── cadastro.css
 │   ├── estoque.css
 │   ├── produtos.css
 │   └── alertas.css
 ├── js/                     # Lógica das telas e do Firebase
 │   ├── firebase-config.js  # Configuração do projeto Firebase
+│   ├── firebase-app.js     # Inicialização do Firebase (Auth + Firestore)
+│   ├── sessao.js           # Proteção das telas e logout
 │   ├── regras-alertas.js   # Regras compartilhadas dos alertas
+│   ├── login.js
+│   ├── cadastro.js
 │   ├── estoque.js
 │   ├── produtos.js
 │   └── alertas.js
@@ -119,11 +131,20 @@ BBTEC/
 Os dados ficam no **Firestore**, em formato JSON, em duas coleções:
 
 ```
+usuarios (coleção)
+└── {uid} (documento)
+    ├── nome: "Bruna Cristina"
+    ├── email: "usuario@email.com"
+    ├── empresa: "Minha Empresa"
+    ├── cargo: "Gerente"
+    └── criadoEm: timestamp
+
 estoques (coleção)
 └── {idDoEstoque} (documento)
     ├── nome: "Produtos de Limpeza"
     ├── status: "ativo" | "desativado"
     ├── imagem: "https://..." ou imagem em texto (data URL)
+    ├── donoId: "{uid do usuário dono}"
     ├── criadoEm: timestamp
     └── produtos (subcoleção)
         └── {idDoProduto} (documento)
@@ -135,7 +156,32 @@ estoques (coleção)
             ├── fornecedor: "Distribuidora Limpa Bem"
             └── endereco: "Rua Exemplo, 100, Centro"
 ```
+## Regras de segurança do Firestore
+Cada usuário acessa só o próprio perfil e os próprios estoques (e os produtos deles):
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
 
+    match /usuarios/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    match /estoques/{id} {
+      allow read, delete: if request.auth != null && resource.data.donoId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.donoId == request.auth.uid;
+      allow update: if request.auth != null && resource.data.donoId == request.auth.uid
+                    && request.resource.data.donoId == request.auth.uid;
+
+      match /produtos/{produto} {
+        allow read, write: if request.auth != null
+          && get(/databases/$(database)/documents/estoques/$(id)).data.donoId == request.auth.uid;
+      }
+    }
+  }
+}
+
+```
 ## Regras dos alertas
 
 As regras ficam em `js/regras-alertas.js` e valem para a tela de estoques e a de alertas:
@@ -167,36 +213,11 @@ Cuidados de acessibilidade:
    git clone https://github.com/brulameira/BBTEC.git
    ```
 2. Crie um projeto no [Firebase Console](https://console.firebase.google.com), ative o **Firestore** e registre um app **Web**.
-3.
-```
-    export const firebaseConfig = {
-      apiKey: "AIzaSyBF1-k3atEVoaUnbrR-ELNuKTrJaxHhxeE",
-      authDomain: "bbtec-fd1d0.firebaseapp.com",
-      projectId: "bbtec-fd1d0",
-      storageBucket: "bbtec-fd1d0.firebasestorage.app",
-      messagingSenderId: "442659819439",
-      appId: "1:442659819439:web:99badaa103e02dfb34695a"
-  
-    };
-```
-4. No Firestore, em **Regras**, publique:
-   ```
-   rules_version = '2';
-   service cloud.firestore {
-     match /databases/{database}/documents {
-       match /estoques/{id} {
-         allow read, write: if true;
-         match /produtos/{produto} {
-           allow read, write: if true;
-         }
-       }
-     }
-   }
-   ```
-   > Essas regras deixam o banco aberto e servem para o ambiente acadêmico. Em um sistema real, o acesso deve exigir login (Firebase Authentication).
-5. Abra a pasta no VS Code e rode `html/estoque.html` com a extensão **Live Server** (abrir o arquivo com duplo clique não funciona, porque o projeto usa módulos ES).
+3. Ative o **Firestore** e, em **Authentication** > Sign-in method, ative E-mail/senha e Google
 
-Enquanto o `firebase-config.js` tiver valores `COLE_AQUI`, o sistema funciona em **modo demonstração**, com dados guardados só no navegador.
+4. Copie a configuração do app para js/firebase-config.js e publique as regras do Firestore da seção Banco de dados.
+   
+5. Abra a pasta no VS Code e rode html/login.html com a extensão Live Server (abrir o arquivo com duplo clique não funciona, porque o projeto usa módulos ES). Acesse por localhost: o login com Google só funciona em domínios autorizados no Firebase.
 
 ## Publicação
 
@@ -220,7 +241,6 @@ O histórico de commits e de pull requests mostra o desenvolvimento incremental 
 
 ## Próximos passos
 
-- Autenticação de usuários com Firebase Authentication e regras de segurança por usuário.
-- Tela de cadastro, perfil e configurações.
+- Telas de perfil e configurações.
 - Histórico de entradas e saídas de produtos.
 - Relatórios e exportação da planilha.
