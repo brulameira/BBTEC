@@ -10,7 +10,14 @@ const $ = (s) => document.querySelector(s);
 function aviso(msg, tipo = "sucesso") {
   const el = $("#aviso");
   el.textContent = msg; el.className = "aviso " + tipo; el.hidden = false;
-  clearTimeout(aviso.t); aviso.t = setTimeout(() => el.hidden = true, 3500);
+  // popover: mostra o aviso na "camada de cima" do navegador, acima das janelas (dialog) abertas
+  try {
+    el.setAttribute("popover", "manual");
+    if (el.matches(":popover-open")) el.hidePopover();
+    el.showPopover();
+  } catch { /* navegador antigo: fica com o estilo normal */ }
+  clearTimeout(aviso.t);
+  aviso.t = setTimeout(() => { el.hidden = true; try { el.hidePopover(); } catch { /* já fechado */ } }, 3500);
 }
 
 function semAcesso(texto) {
@@ -285,11 +292,11 @@ dlgMov.querySelector("#formMov").addEventListener("submit", async (ev) => {
 
   const motivo = movMotivo.value.trim() || (movTipo === "entrada" ? "Entrada manual" : "Saída manual");
   try {
-    await dados.movimentar(movProduto, movTipo, qtd, motivo);
+        await dados.movimentar(movProduto, movTipo, qtd, motivo);
     dlgMov.close();
-    aviso(movTipo === "entrada" ? "Entrada registrada com sucesso!" : "Saída registrada com sucesso!");
     if (veioDosAlertas) setTimeout(voltarParaAlertas, 1200);
     else { const p = produtos.find(x => x.id === movProduto.id); if (p) detalhes(p); }
+    aviso(movTipo === "entrada" ? "Entrada registrada com sucesso!" : "Saída registrada com sucesso!");
   } catch {
     aviso("Não foi possível registrar a movimentação. Tente novamente.", "erro");
   }

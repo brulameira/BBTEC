@@ -154,7 +154,7 @@ document.querySelectorAll(".aba").forEach(a => a.addEventListener("click", () =>
 $("fBusca").addEventListener("input", renderizar);
 
 /* ---------- Exportar planilha (CSV para Excel) e imprimir ---------- */
-// Texto que começa com = + - @ vira texto simples, para o Excel não executar como fórmula
+
 const celula = (v) => { let t = v == null ? "" : String(v); if (/^[=+\-@]/.test(t)) t = "'" + t; return `"${t.replace(/"/g, '""')}"`; };
 const dinheiro = (n) => Number(n).toFixed(2).replace(".", ",");
 
@@ -199,3 +199,5 @@ try {
   $("vazioResumo").hidden = false;
   $("vazioResumo").textContent = "Não foi possível carregar os relatórios. Verifique sua conexão e tente novamente.";
 }
+
+

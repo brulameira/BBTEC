@@ -8,7 +8,14 @@ const $ = (s) => document.querySelector(s);
 function aviso(msg, tipo = "sucesso") {
   const el = $("#aviso");
   el.textContent = msg; el.className = "aviso " + tipo; el.hidden = false;
-  clearTimeout(aviso.t); aviso.t = setTimeout(() => el.hidden = true, 3500);
+  // popover: mostra o aviso na "camada de cima" do navegador, acima das janelas (dialog) abertas
+  try {
+    el.setAttribute("popover", "manual");
+    if (el.matches(":popover-open")) el.hidePopover();
+    el.showPopover();
+  } catch { /* navegador antigo: fica com o estilo normal */ }
+  clearTimeout(aviso.t);
+  aviso.t = setTimeout(() => { el.hidden = true; try { el.hidePopover(); } catch { /* já fechado */ } }, 3500);
 }
 
 const usuario = await exigirLogin(); // sem login, a página volta para o login

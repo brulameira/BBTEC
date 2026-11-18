@@ -41,7 +41,7 @@ dialog {
 .tabela th,
 .tabela td {
     padding: 14px 28px;
-    text-align: left;
+    text-align: center;
     border-bottom: 1px solid var(--cinza-claro);
 }
 
@@ -53,7 +53,7 @@ dialog {
 }
 
 .tabela .num {
-    text-align: right;
+    text-align: center;
 }
 
 .tabela tbody tr {
@@ -129,6 +129,15 @@ dialog {
     display: grid;
     grid-template-columns: 1.2fr 1fr 1fr;
     gap: 12px;
+}
+
+a.instrucao {
+    display: block;
+    font-size: 15px;
+    color: #6B6B6B;
+    text-align: center;
+    margin: 12px 0 0;
+    
 }
 
 @media (max-width: 560px) {
