@@ -1,9 +1,10 @@
-import { firebaseConfig } from "./firebase-config.js";
+import { db, collection, onSnapshot, writeBatch, updateDoc, doc, getDoc, serverTimestamp } from "./firebase-app.js";
+import { exigirLogin } from "./sessao.js";
 
-const estoqueId = new URLSearchParams(location.search).get("estoque");
-const veioDosAlertas = new URLSearchParams(location.search).get("origem") === "alertas";
+const params = new URLSearchParams(location.search);
+const estoqueId = params.get("estoque");
+const veioDosAlertas = params.get("origem") === "alertas";
 const voltarParaAlertas = () => { if (veioDosAlertas) location.href = "alertas.html"; };
-const modoDemo = Object.values(firebaseConfig).some(v => v === "COLE_AQUI"); // observa se esta no modo demo.
 const $ = (s) => document.querySelector(s);
 
 function aviso(msg, tipo = "sucesso") {
@@ -12,44 +13,82 @@ function aviso(msg, tipo = "sucesso") {
   clearTimeout(aviso.t); aviso.t = setTimeout(() => el.hidden = true, 3500);
 }
 
-if (!estoqueId) {
+function semAcesso(texto) {
   $("#contador").textContent = "";
   $("#btnNovo").hidden = true;
   $("#vazio").hidden = false;
-  $("#vazio").innerHTML = 'Nenhum estoque selecionado. <a href="estoque.html">Volte aos estoques</a> e clique em "Visualizar".';
+  $("#vazio").innerHTML = texto;
+}
+
+const usuario = await exigirLogin(); // sem login, a página volta para o login
+
+if (!estoqueId) {
+  semAcesso('Nenhum estoque selecionado. <a href="estoque.html">Volte aos estoques</a> e clique em "Visualizar".');
   throw new Error("Estoque não informado na URL");
 }
 
-/* ---------- Dados: Firestore (estoques/{id}/produtos) ou demonstração (localStorage) ---------- */
-let dados;
-if (modoDemo) {
-  const chave = "bbtec_produtos_" + estoqueId;
-  const ler = () => { try { return JSON.parse(localStorage.getItem(chave)) || []; } catch { return []; } };
-  let ouvinte = () => { };
-  const gravar = (l) => { try { localStorage.setItem(chave, JSON.stringify(l)); } catch { } ouvinte(l); };
-  dados = {
-    nomeEstoque: async () => "Estoque",
-    assinar: (cb) => { ouvinte = cb; cb(ler()); },
-    criar: async (p) => gravar([...ler(), { ...p, id: String(Date.now()) }]),
-    atualizar: async (id, p) => gravar(ler().map(x => x.id === id ? { ...x, ...p } : x)),
-    excluir: async (id) => gravar(ler().filter(x => x.id !== id))
-  };
-} else {
-  const V = "10.12.2";
-  const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`);
-  const fs = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`);
-  const db = fs.getFirestore(initializeApp(firebaseConfig));
-  const col = fs.collection(db, "estoques", estoqueId, "produtos");
-  dados = {
-    nomeEstoque: async () => { const s = await fs.getDoc(fs.doc(db, "estoques", estoqueId)); return s.exists() ? s.data().nome : "Estoque"; },
-    assinar: (cb) => fs.onSnapshot(col,
-      snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
-      () => aviso("Não foi possível carregar os produtos. Verifique sua conexão.", "erro")),
-    criar: (p) => fs.addDoc(col, { ...p, criadoEm: fs.serverTimestamp() }),
-    atualizar: (id, p) => fs.updateDoc(fs.doc(db, "estoques", estoqueId, "produtos", id), p),
-    excluir: (id) => fs.deleteDoc(fs.doc(db, "estoques", estoqueId, "produtos", id))
-  };
+/* ---------- Dados: estoques/{id}/produtos (só o dono do estoque tem acesso) ---------- */
+let nomeDoEstoque = "Estoque";
+try {
+  const s = await getDoc(doc(db, "estoques", estoqueId));
+  if (!s.exists()) throw new Error("inexistente");
+  nomeDoEstoque = s.data().nome || "Estoque";
+} catch {
+  semAcesso('Estoque não encontrado ou sem permissão de acesso. <a href="estoque.html">Volte aos estoques</a>.');
+  throw new Error("Sem acesso ao estoque");
 }
+
+const col = collection(db, "estoques", estoqueId, "produtos");
+const colMov = collection(db, "estoques", estoqueId, "movimentacoes");
+const responsavel = usuario.displayName || usuario.email || "Usuário";
+
+// Monta um registro do histórico de entradas e saídas
+const movimento = (prod, tipo, quantidade, saldoAnterior, saldoNovo, motivo) => ({
+  produtoId: prod.id, produtoNome: prod.nome, produtoCodigo: prod.codigo,
+  tipo, quantidade, saldoAnterior, saldoNovo, motivo, usuarioNome: responsavel, data: serverTimestamp()
+});
+
+const dados = {
+  assinar: (cb) => onSnapshot(col,
+    snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
+    () => aviso("Não foi possível carregar os produtos. Verifique sua conexão.", "erro")),
+
+  // Produto novo: se já tem unidades, registra a entrada inicial no histórico
+  criar: async (p) => {
+    const ref = doc(col), lote = writeBatch(db);
+    lote.set(ref, { ...p, criadoEm: serverTimestamp() });
+    if (p.quantidade > 0) lote.set(doc(colMov), movimento({ id: ref.id, ...p }, "entrada", p.quantidade, 0, p.quantidade, "Cadastro do produto"));
+    await lote.commit();
+  },
+
+  // Edição: se a quantidade mudou, registra o ajuste no histórico
+  atualizar: async (id, p, anterior) => {
+    const lote = writeBatch(db);
+    lote.update(doc(col, id), p);
+    const antes = Number(anterior?.quantidade) || 0, dif = p.quantidade - antes;
+    if (dif !== 0) lote.set(doc(colMov), movimento({ id, ...p }, dif > 0 ? "entrada" : "saida", Math.abs(dif), antes, p.quantidade, "Ajuste na edição do produto"));
+    await lote.commit();
+  },
+
+  // Entrada ou saída manual (botões dos detalhes)
+  movimentar: async (prod, tipo, quantidade, motivo) => {
+    const antes = Number(prod.quantidade) || 0;
+    const depois = tipo === "entrada" ? antes + quantidade : antes - quantidade;
+    const lote = writeBatch(db);
+    lote.update(doc(col, prod.id), { quantidade: depois });
+    lote.set(doc(colMov), movimento(prod, tipo, quantidade, antes, depois, motivo));
+    await lote.commit();
+  },
+
+  // Exclusão: as unidades restantes saem do histórico como "Produto excluído"
+  excluir: async (prod) => {
+    const lote = writeBatch(db);
+    lote.delete(doc(col, prod.id));
+    const antes = Number(prod.quantidade) || 0;
+    if (antes > 0) lote.set(doc(colMov), movimento(prod, "saida", antes, antes, 0, "Produto excluído do estoque"));
+    await lote.commit();
+  }
+};
 
 /* ---------- Estado e elementos ---------- */
 let produtos = [], termo = "", atual = null; // atual = produto aberto nos detalhes / em edição
@@ -59,9 +98,10 @@ const dlgDetalhe = $("#dlgDetalhe"), dlgForm = $("#dlgForm"), form = $("#formPro
 const btnExcluir = $("#btnExcluir"), txtExcluir = btnExcluir.querySelector("span"), msgExcluir = $("#msgExcluir");
 const campos = { nome: $("#fNome"), codigo: $("#fCodigo"), preco: $("#fPreco"), validade: $("#fValidade"), quantidade: $("#fQtd"), fornecedor: $("#fFornecedor"), endereco: $("#fEndereco") };
 
-$("#usuarioNome").textContent = sessionStorage.getItem("bbtecUsuario") || "Usuario_111";
-$("#usuarioEmail").textContent = sessionStorage.getItem("bbtecEmail") || "Usuario@gmail.com";
-dados.nomeEstoque().then(n => { $("#tituloEstoque").textContent = n; document.title = n + " | BBtec"; }).catch(() => { });
+$("#tituloEstoque").textContent = nomeDoEstoque;
+document.title = nomeDoEstoque + " | BBtec";
+
+const dataBR = (v) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v)) ? v.slice(0, 10).split("-").reverse().join("/") : "/";
 
 /* ---------- Planilha ---------- */
 function render() {
@@ -81,15 +121,7 @@ function render() {
     tdNome.append(b);
     const tdCod = document.createElement("td"); tdCod.textContent = p.codigo;
     const tdPreco = document.createElement("td"); tdPreco.className = "num"; tdPreco.textContent = brl.format(p.preco);
-
-    const tdValidade = document.createElement("td");
-    if (p.validade) {
-      const [ano, mes, dia] = p.validade.split("-");
-      tdValidade.textContent = `${dia}/${mes}/${ano}`;
-    } else {
-      tdValidade.textContent = "/";
-    }
-
+    const tdValidade = document.createElement("td"); tdValidade.textContent = dataBR(p.validade);
     const tdQtd = document.createElement("td"); tdQtd.className = "num";
     if (Number(p.quantidade) === 0) { tdQtd.innerHTML = '<span class="sem-estoque">Sem estoque</span>'; }
     else tdQtd.textContent = p.quantidade;
@@ -112,7 +144,7 @@ function detalhes(p) {
   $("#dCodigo").textContent = p.codigo;
   $("#dPreco").textContent = brl.format(p.preco);
   $("#dQtd").textContent = Number(p.quantidade) === 0 ? "0 (sem estoque)" : p.quantidade;
-  $("#dValidade").textContent = p.validade ? p.validade.split("-").reverse().join("/") : "/";
+  $("#dValidade").textContent = dataBR(p.validade);
   $("#dFornecedor").textContent = p.fornecedor || "-";
   $("#dEndereco").textContent = p.endereco || "-";
   resetExcluir();
@@ -127,7 +159,7 @@ btnExcluir.addEventListener("click", async () => {
     btnExcluir.classList.add("confirmar"); txtExcluir.textContent = "Confirmar exclusão"; msgExcluir.hidden = false;
     return;
   }
-  try { await dados.excluir(atual.id); dlgDetalhe.close(); aviso("Produto excluído com sucesso!"); setTimeout(voltarParaAlertas, 1200); }
+  try { await dados.excluir(atual); dlgDetalhe.close(); aviso("Produto excluído com sucesso!"); setTimeout(voltarParaAlertas, 1200); }
   catch { aviso("Não foi possível excluir o produto. Tente novamente.", "erro"); }
 });
 
@@ -148,7 +180,7 @@ function abrirForm(p) {
   campos.fornecedor.value = p?.fornecedor ?? "";
   campos.endereco.value = p?.endereco ?? "";
   limparErros();
-   dlgForm.showModal(); campos.nome.focus();
+  dlgForm.showModal(); campos.nome.focus();
 }
 $("#btnNovo").addEventListener("click", () => abrirForm());
 $("#btnCancelar").addEventListener("click", () => dlgForm.close());
@@ -191,17 +223,82 @@ form.addEventListener("submit", async (ev) => {
   };
   const novo = !atual;
   try {
-    if (novo) await dados.criar(payload); else await dados.atualizar(atual.id, payload);
+    if (novo) await dados.criar(payload); else await dados.atualizar(atual.id, payload, atual);
     dlgForm.close(); aviso(novo ? "Produto cadastrado com sucesso!" : "Produto atualizado com sucesso!"); setTimeout(voltarParaAlertas, 1200);
   } catch {
     aviso("Não foi possível salvar o produto. Verifique os campos preenchidos.", "erro");
   }
 });
 
+/* ---------- Entradas e saídas (histórico de movimentações) ---------- */
+const linhaMov = document.createElement("div");
+linhaMov.className = "mov-botoes";
+linhaMov.innerHTML = '<button type="button" class="btn-sec" id="btnEntrada">+ Registrar entrada</button><button type="button" class="btn-sec" id="btnSaida">− Registrar saída</button>';
+dlgDetalhe.querySelector(".acoes").before(linhaMov);
+
+const dlgMov = document.createElement("dialog");
+dlgMov.setAttribute("aria-labelledby", "movTitulo");
+dlgMov.innerHTML = `<form id="formMov" novalidate>
+  <h2 id="movTitulo"></h2>
+  <p class="mov-saldo" id="movSaldo"></p>
+  <div class="campo">
+    <label for="movQtd">Quantidade</label>
+    <input type="number" id="movQtd" min="1" step="1" inputmode="numeric" placeholder="Ex.: 10">
+    <p class="erro" hidden></p>
+  </div>
+  <div class="campo">
+    <label for="movMotivo">Motivo (opcional)</label>
+    <input type="text" id="movMotivo" maxlength="80" placeholder="Ex.: compra, venda, perda">
+  </div>
+  <div class="acoes">
+    <button type="button" class="btn-sec" id="movCancelar">Cancelar</button>
+    <button type="submit" class="btn-principal">Registrar</button>
+  </div>
+</form>`;
+document.body.append(dlgMov);
+
+const movQtd = dlgMov.querySelector("#movQtd"), movMotivo = dlgMov.querySelector("#movMotivo");
+let movTipo = "entrada", movProduto = null;
+
+function abrirMov(tipo) {
+  movTipo = tipo; movProduto = atual;
+  const saldo = Number(movProduto.quantidade) || 0;
+  dlgMov.querySelector("#movTitulo").textContent = (tipo === "entrada" ? "Registrar entrada" : "Registrar saída") + " - " + movProduto.nome;
+  dlgMov.querySelector("#movSaldo").textContent = `Quantidade atual em estoque: ${saldo}`;
+  movQtd.value = ""; movMotivo.value = "";
+  const erro = erroDe(movQtd); erro.hidden = true; movQtd.classList.remove("invalido");
+  dlgDetalhe.close(); dlgMov.showModal(); movQtd.focus();
+}
+
+$("#btnEntrada").addEventListener("click", () => abrirMov("entrada"));
+$("#btnSaida").addEventListener("click", () => abrirMov("saida"));
+dlgMov.querySelector("#movCancelar").addEventListener("click", () => { dlgMov.close(); detalhes(movProduto); });
+
+dlgMov.querySelector("#formMov").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const qtd = Number(movQtd.value), saldo = Number(movProduto.quantidade) || 0, erro = erroDe(movQtd);
+  let msg = "";
+  if (movQtd.value === "" || !Number.isInteger(qtd) || qtd < 1) msg = "Informe uma quantidade inteira, a partir de 1.";
+  else if (movTipo === "saida" && qtd > saldo) msg = `A saída é maior que o saldo: há ${saldo} ${saldo === 1 ? "unidade" : "unidades"} em estoque.`;
+  erro.textContent = msg; erro.hidden = !msg; movQtd.classList.toggle("invalido", !!msg);
+  if (msg) { movQtd.focus(); return; }
+
+  const motivo = movMotivo.value.trim() || (movTipo === "entrada" ? "Entrada manual" : "Saída manual");
+  try {
+    await dados.movimentar(movProduto, movTipo, qtd, motivo);
+    dlgMov.close();
+    aviso(movTipo === "entrada" ? "Entrada registrada com sucesso!" : "Saída registrada com sucesso!");
+    if (veioDosAlertas) setTimeout(voltarParaAlertas, 1200);
+    else { const p = produtos.find(x => x.id === movProduto.id); if (p) detalhes(p); }
+  } catch {
+    aviso("Não foi possível registrar a movimentação. Tente novamente.", "erro");
+  }
+});
+
 $("#busca").addEventListener("input", e => { termo = e.target.value.trim(); render(); });
 $("#formBusca").addEventListener("submit", e => e.preventDefault());
 
-let abrirDaUrl = new URLSearchParams(location.search).get("produto");
+let abrirDaUrl = params.get("produto"); // vindo da tela de alertas: abre o produto direto
 dados.assinar(lista => {
   produtos = lista; render();
   if (abrirDaUrl) { const p = produtos.find(x => x.id === abrirDaUrl); abrirDaUrl = null; if (p) detalhes(p); }

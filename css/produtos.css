@@ -1,4 +1,4 @@
-/* BBtec - Tela de produtos. Usa os tokens e componentes de estoque.css */
+
 dialog {
     margin: auto;
 }
@@ -35,13 +35,13 @@ dialog {
 .tabela {
     width: 100%;
     border-collapse: collapse;
-    min-width: 520px;
+    min-width: 560px;
 }
 
 .tabela th,
 .tabela td {
-    padding: 14px 18px;
-    text-align: center;
+    padding: 14px 28px;
+    text-align: left;
     border-bottom: 1px solid var(--cinza-claro);
 }
 
@@ -49,11 +49,11 @@ dialog {
     background: var(--azul-claro);
     color: var(--titulo);
     font-weight: 600;
-    font-size: 15px;
+    font-size: 14px;
 }
 
 .tabela .num {
-    text-align: center;
+    text-align: right;
 }
 
 .tabela tbody tr {
@@ -67,8 +67,6 @@ dialog {
 .tabela tbody tr:last-child td {
     border-bottom: 0;
 }
-
-
 
 .nome-produto {
     font: inherit;
@@ -110,14 +108,14 @@ dialog {
 }
 
 .detalhes dt {
-    font-size: 14px;
-    color: #6B6B6B;
+    font-weight: 600;
+    color: var(--titulo);
 }
 
 .detalhes dd {
     margin: 2px 0 0;
-    font-weight: 600;
-    color: var(--titulo);
+    font-weight: 400;
+    color: var(--texto);
     overflow-wrap: anywhere;
 }
 
@@ -141,4 +139,23 @@ dialog {
     .detalhes {
         grid-template-columns: 1fr;
     }
+}
+
+/* Entradas e saídas */
+.mov-botoes {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.mov-botoes .btn-sec {
+    font-size: 15px;
+    height: 42px;
+    padding: 0 18px;
+}
+
+.mov-saldo {
+    color: #6B6B6B;
+    margin: -6px 0 16px;
 }
