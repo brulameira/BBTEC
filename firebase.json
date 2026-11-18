@@ -1,6 +1,132 @@
 {
   "hosting": {
     "public": ".",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "README.md"]
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "README.md"
+    ],
+    "redirects": [
+      {
+        "source": "/index.html",
+        "destination": "/",
+        "type": 301
+      },
+      {
+        "source": "/login.html",
+        "destination": "/login",
+        "type": 301
+      },
+      {
+        "source": "/Pages/login.html",
+        "destination": "/login",
+        "type": 301
+      },
+      {
+        "source": "/cadastro.html",
+        "destination": "/cadastro",
+        "type": 301
+      },
+      {
+        "source": "/Pages/cadastro.html",
+        "destination": "/cadastro",
+        "type": 301
+      },
+      {
+        "source": "/estoque.html",
+        "destination": "/estoque",
+        "type": 301
+      },
+      {
+        "source": "/Pages/estoque.html",
+        "destination": "/estoque",
+        "type": 301
+      },
+      {
+        "source": "/produtos.html",
+        "destination": "/produtos",
+        "type": 301
+      },
+      {
+        "source": "/Pages/produtos.html",
+        "destination": "/produtos",
+        "type": 301
+      },
+      {
+        "source": "/alertas.html",
+        "destination": "/alertas",
+        "type": 301
+      },
+      {
+        "source": "/Pages/alertas.html",
+        "destination": "/alertas",
+        "type": 301
+      },
+      {
+        "source": "/relatorios.html",
+        "destination": "/relatorios",
+        "type": 301
+      },
+      {
+        "source": "/Pages/relatorios.html",
+        "destination": "/relatorios",
+        "type": 301
+      },
+      {
+        "source": "/configuracao.html",
+        "destination": "/configuracao",
+        "type": 301
+      },
+      {
+        "source": "/Pages/configuracao.html",
+        "destination": "/configuracao",
+        "type": 301
+      },
+      {
+        "source": "/perfil.html",
+        "destination": "/perfil",
+        "type": 301
+      },
+      {
+        "source": "/Pages/perfil.html",
+        "destination": "/perfil",
+        "type": 301
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "/login",
+        "destination": "/Pages/login.html"
+      },
+      {
+        "source": "/cadastro",
+        "destination": "/Pages/cadastro.html"
+      },
+      {
+        "source": "/estoque",
+        "destination": "/Pages/estoque.html"
+      },
+      {
+        "source": "/produtos",
+        "destination": "/Pages/produtos.html"
+      },
+      {
+        "source": "/alertas",
+        "destination": "/Pages/alertas.html"
+      },
+      {
+        "source": "/relatorios",
+        "destination": "/Pages/relatorios.html"
+      },
+      {
+        "source": "/configuracao",
+        "destination": "/Pages/configuracao.html"
+      },
+      {
+        "source": "/perfil",
+        "destination": "/Pages/perfil.html"
+      }
+    ]
   }
 }

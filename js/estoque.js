@@ -82,7 +82,7 @@ function render() {
       <div class="imagem"></div>
       <h2></h2>
       <p class="alertas ${n ? "tem" : ""}">${n === 0 ? "Nenhum alerta" : n === 1 ? "1 alerta encontrado" : n + " alertas encontrados"}</p>
-      <a class="btn-principal" href="produtos.html?estoque=${encodeURIComponent(e.id)}">Visualizar</a>
+      <a class="btn-principal" href="produtos?estoque=${encodeURIComponent(e.id)}">Visualizar</a>
       <button class="link-editar" type="button">Editar</button>`;
     c.querySelector("h2").textContent = e.nome;
     const img = c.querySelector(".imagem");

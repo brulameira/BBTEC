@@ -2,7 +2,7 @@
    O perfil (sem senha) é salvo no Firestore, em usuarios/{uid}. */
 import { auth, firebaseConfigurado, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, updateProfile, garantirPerfil, lembrarUsuario } from "./firebase-app.js";
 
-const DESTINO = "estoque.html"; // para onde ir depois de cadastrar
+const DESTINO = (location.hostname === "localhost" || location.hostname === "127.0.0.1") ? "estoque.html" : "/estoque";
 
 (function () {
   "use strict";

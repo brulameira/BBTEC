@@ -5,7 +5,7 @@
 import { auth, db, doc, getDoc, collection, query, where, getDocs, firebaseConfigurado, onAuthStateChanged, signOut, lembrarUsuario } from "./firebase-app.js";
 import { definirConfiguracao, contarAlertas } from "./regras-alertas.js";
 
-const LOGIN = "login.html";
+const LOGIN = (location.hostname === "localhost" || location.hostname === "127.0.0.1") ? "login.html" : "/login";
 const chaveConfig = (uid) => "bbtec_cfg_" + uid;
 const chaveSelo = (uid) => "bbtec_selo_" + uid;
 

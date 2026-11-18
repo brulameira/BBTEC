@@ -54,7 +54,7 @@ function render() {
     const c = document.createElement("article"); c.className = "alerta";
     c.innerHTML = `<div class="icone">${a.grave ? ICONE_GRAVE : ICONE_AVISO}</div>
       <div class="textos"><h2></h2><p></p></div>
-      <a class="btn-sec" href="produtos.html?estoque=${encodeURIComponent(a.estoque.id)}&produto=${encodeURIComponent(a.produto.id)}&origem=alertas">Ver Detalhes</a>`;
+      <a class="btn-sec" href="produtos?estoque=${encodeURIComponent(a.estoque.id)}&produto=${encodeURIComponent(a.produto.id)}&origem=alertas">Ver Detalhes</a>`;
     c.querySelector("h2").textContent = a.titulo;
     const p = c.querySelector("p");
     const nome = document.createElement("strong"); nome.textContent = a.produto.nome;

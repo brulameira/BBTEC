@@ -4,7 +4,7 @@ import {
   sendPasswordResetEmail, garantirPerfil, lembrarUsuario
 } from "./firebase-app.js";
 
-const DESTINO = "estoque.html"; // para onde ir depois de entrar
+const DESTINO = (location.hostname === "localhost" || location.hostname === "127.0.0.1") ? "estoque.html" : "/estoque";
 
 const $ = (id) => document.getElementById(id);
 const form = $("form");
