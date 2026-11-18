@@ -1,4 +1,4 @@
-/* BBtec - Tela do usuário (Estoques). Tokens conforme o Guia Visual, seção 2 */
+
 :root {
   --azul: #4F46E5;
   --azul-hover: #7A74EE;
@@ -696,7 +696,7 @@ dialog h2 {
 
   .menu nav ul {
     grid-auto-flow: row;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 4px;
     overflow: visible;
   }
@@ -706,7 +706,7 @@ dialog h2 {
     justify-content: center;
     gap: 2px;
     padding: 6px 2px;
-    font-size: 12px;
+    font-size: 11px;
     text-align: center;
   }
 

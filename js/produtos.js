@@ -1,4 +1,4 @@
-import { db, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDoc, serverTimestamp } from "./firebase-app.js";
+import { db, collection, onSnapshot, writeBatch, updateDoc, doc, getDoc, serverTimestamp } from "./firebase-app.js";
 import { exigirLogin } from "./sessao.js";
 
 const params = new URLSearchParams(location.search);
@@ -20,7 +20,7 @@ function semAcesso(texto) {
   $("#vazio").innerHTML = texto;
 }
 
-await exigirLogin(); // sem login, a página volta para o login
+const usuario = await exigirLogin(); // sem login, a página volta para o login
 
 if (!estoqueId) {
   semAcesso('Nenhum estoque selecionado. <a href="estoque.html">Volte aos estoques</a> e clique em "Visualizar".');
@@ -39,13 +39,55 @@ try {
 }
 
 const col = collection(db, "estoques", estoqueId, "produtos");
+const colMov = collection(db, "estoques", estoqueId, "movimentacoes");
+const responsavel = usuario.displayName || usuario.email || "Usuário";
+
+// Monta um registro do histórico de entradas e saídas
+const movimento = (prod, tipo, quantidade, saldoAnterior, saldoNovo, motivo) => ({
+  produtoId: prod.id, produtoNome: prod.nome, produtoCodigo: prod.codigo,
+  tipo, quantidade, saldoAnterior, saldoNovo, motivo, usuarioNome: responsavel, data: serverTimestamp()
+});
+
 const dados = {
   assinar: (cb) => onSnapshot(col,
     snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
     () => aviso("Não foi possível carregar os produtos. Verifique sua conexão.", "erro")),
-  criar: (p) => addDoc(col, { ...p, criadoEm: serverTimestamp() }),
-  atualizar: (id, p) => updateDoc(doc(db, "estoques", estoqueId, "produtos", id), p),
-  excluir: (id) => deleteDoc(doc(db, "estoques", estoqueId, "produtos", id))
+
+  // Produto novo: se já tem unidades, registra a entrada inicial no histórico
+  criar: async (p) => {
+    const ref = doc(col), lote = writeBatch(db);
+    lote.set(ref, { ...p, criadoEm: serverTimestamp() });
+    if (p.quantidade > 0) lote.set(doc(colMov), movimento({ id: ref.id, ...p }, "entrada", p.quantidade, 0, p.quantidade, "Cadastro do produto"));
+    await lote.commit();
+  },
+
+  // Edição: se a quantidade mudou, registra o ajuste no histórico
+  atualizar: async (id, p, anterior) => {
+    const lote = writeBatch(db);
+    lote.update(doc(col, id), p);
+    const antes = Number(anterior?.quantidade) || 0, dif = p.quantidade - antes;
+    if (dif !== 0) lote.set(doc(colMov), movimento({ id, ...p }, dif > 0 ? "entrada" : "saida", Math.abs(dif), antes, p.quantidade, "Ajuste na edição do produto"));
+    await lote.commit();
+  },
+
+  // Entrada ou saída manual (botões dos detalhes)
+  movimentar: async (prod, tipo, quantidade, motivo) => {
+    const antes = Number(prod.quantidade) || 0;
+    const depois = tipo === "entrada" ? antes + quantidade : antes - quantidade;
+    const lote = writeBatch(db);
+    lote.update(doc(col, prod.id), { quantidade: depois });
+    lote.set(doc(colMov), movimento(prod, tipo, quantidade, antes, depois, motivo));
+    await lote.commit();
+  },
+
+  // Exclusão: as unidades restantes saem do histórico como "Produto excluído"
+  excluir: async (prod) => {
+    const lote = writeBatch(db);
+    lote.delete(doc(col, prod.id));
+    const antes = Number(prod.quantidade) || 0;
+    if (antes > 0) lote.set(doc(colMov), movimento(prod, "saida", antes, antes, 0, "Produto excluído do estoque"));
+    await lote.commit();
+  }
 };
 
 /* ---------- Estado e elementos ---------- */
@@ -117,7 +159,7 @@ btnExcluir.addEventListener("click", async () => {
     btnExcluir.classList.add("confirmar"); txtExcluir.textContent = "Confirmar exclusão"; msgExcluir.hidden = false;
     return;
   }
-  try { await dados.excluir(atual.id); dlgDetalhe.close(); aviso("Produto excluído com sucesso!"); setTimeout(voltarParaAlertas, 1200); }
+  try { await dados.excluir(atual); dlgDetalhe.close(); aviso("Produto excluído com sucesso!"); setTimeout(voltarParaAlertas, 1200); }
   catch { aviso("Não foi possível excluir o produto. Tente novamente.", "erro"); }
 });
 
@@ -181,10 +223,75 @@ form.addEventListener("submit", async (ev) => {
   };
   const novo = !atual;
   try {
-    if (novo) await dados.criar(payload); else await dados.atualizar(atual.id, payload);
+    if (novo) await dados.criar(payload); else await dados.atualizar(atual.id, payload, atual);
     dlgForm.close(); aviso(novo ? "Produto cadastrado com sucesso!" : "Produto atualizado com sucesso!"); setTimeout(voltarParaAlertas, 1200);
   } catch {
     aviso("Não foi possível salvar o produto. Verifique os campos preenchidos.", "erro");
+  }
+});
+
+/* ---------- Entradas e saídas (histórico de movimentações) ---------- */
+const linhaMov = document.createElement("div");
+linhaMov.className = "mov-botoes";
+linhaMov.innerHTML = '<button type="button" class="btn-sec" id="btnEntrada">+ Registrar entrada</button><button type="button" class="btn-sec" id="btnSaida">− Registrar saída</button>';
+dlgDetalhe.querySelector(".acoes").before(linhaMov);
+
+const dlgMov = document.createElement("dialog");
+dlgMov.setAttribute("aria-labelledby", "movTitulo");
+dlgMov.innerHTML = `<form id="formMov" novalidate>
+  <h2 id="movTitulo"></h2>
+  <p class="mov-saldo" id="movSaldo"></p>
+  <div class="campo">
+    <label for="movQtd">Quantidade</label>
+    <input type="number" id="movQtd" min="1" step="1" inputmode="numeric" placeholder="Ex.: 10">
+    <p class="erro" hidden></p>
+  </div>
+  <div class="campo">
+    <label for="movMotivo">Motivo (opcional)</label>
+    <input type="text" id="movMotivo" maxlength="80" placeholder="Ex.: compra, venda, perda">
+  </div>
+  <div class="acoes">
+    <button type="button" class="btn-sec" id="movCancelar">Cancelar</button>
+    <button type="submit" class="btn-principal">Registrar</button>
+  </div>
+</form>`;
+document.body.append(dlgMov);
+
+const movQtd = dlgMov.querySelector("#movQtd"), movMotivo = dlgMov.querySelector("#movMotivo");
+let movTipo = "entrada", movProduto = null;
+
+function abrirMov(tipo) {
+  movTipo = tipo; movProduto = atual;
+  const saldo = Number(movProduto.quantidade) || 0;
+  dlgMov.querySelector("#movTitulo").textContent = (tipo === "entrada" ? "Registrar entrada" : "Registrar saída") + " - " + movProduto.nome;
+  dlgMov.querySelector("#movSaldo").textContent = `Quantidade atual em estoque: ${saldo}`;
+  movQtd.value = ""; movMotivo.value = "";
+  const erro = erroDe(movQtd); erro.hidden = true; movQtd.classList.remove("invalido");
+  dlgDetalhe.close(); dlgMov.showModal(); movQtd.focus();
+}
+
+$("#btnEntrada").addEventListener("click", () => abrirMov("entrada"));
+$("#btnSaida").addEventListener("click", () => abrirMov("saida"));
+dlgMov.querySelector("#movCancelar").addEventListener("click", () => { dlgMov.close(); detalhes(movProduto); });
+
+dlgMov.querySelector("#formMov").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const qtd = Number(movQtd.value), saldo = Number(movProduto.quantidade) || 0, erro = erroDe(movQtd);
+  let msg = "";
+  if (movQtd.value === "" || !Number.isInteger(qtd) || qtd < 1) msg = "Informe uma quantidade inteira, a partir de 1.";
+  else if (movTipo === "saida" && qtd > saldo) msg = `A saída é maior que o saldo: há ${saldo} ${saldo === 1 ? "unidade" : "unidades"} em estoque.`;
+  erro.textContent = msg; erro.hidden = !msg; movQtd.classList.toggle("invalido", !!msg);
+  if (msg) { movQtd.focus(); return; }
+
+  const motivo = movMotivo.value.trim() || (movTipo === "entrada" ? "Entrada manual" : "Saída manual");
+  try {
+    await dados.movimentar(movProduto, movTipo, qtd, motivo);
+    dlgMov.close();
+    aviso(movTipo === "entrada" ? "Entrada registrada com sucesso!" : "Saída registrada com sucesso!");
+    if (veioDosAlertas) setTimeout(voltarParaAlertas, 1200);
+    else { const p = produtos.find(x => x.id === movProduto.id); if (p) detalhes(p); }
+  } catch {
+    aviso("Não foi possível registrar a movimentação. Tente novamente.", "erro");
   }
 });
 

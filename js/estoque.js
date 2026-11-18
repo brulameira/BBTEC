@@ -21,9 +21,11 @@ const dados = {
     () => aviso("Não foi possível carregar os estoques. Verifique sua conexão.", "erro")),
   criar: (e) => addDoc(col, { ...e, donoId: usuario.uid, criadoEm: serverTimestamp() }),
   atualizar: (id, e) => updateDoc(doc(db, "estoques", id), e),
-  excluir: async (id) => { // apaga primeiro os produtos do estoque, depois o estoque
-    const produtos = await getDocs(collection(db, "estoques", id, "produtos"));
-    await Promise.all(produtos.docs.map(p => deleteDoc(p.ref)));
+  excluir: async (id) => { // apaga produtos e histórico do estoque, depois o estoque
+    for (const sub of ["produtos", "movimentacoes"]) {
+      const itens = await getDocs(collection(db, "estoques", id, sub));
+      await Promise.all(itens.docs.map(d => deleteDoc(d.ref)));
+    }
     await deleteDoc(doc(db, "estoques", id));
   },
   assinarProdutos: (id, cb) => onSnapshot(collection(db, "estoques", id, "produtos"),

@@ -1,7 +1,24 @@
-/* Regras de alerta compartilhadas pelas telas de Estoques e de Alertas.
-   Altere os limites aqui e as duas telas passam a usar o mesmo critério. */
-export const LIMITE_ESTOQUE_BAIXO = 5; // alerta quando a quantidade for igual ou menor que isto
-export const DIAS_VENCIMENTO = 7;      // alerta quando faltarem estes dias (ou menos) para vencer
+/* Regras de alerta compartilhadas pelas telas de Estoques, Alertas e Relatórios.
+   Os limites vêm da tela de Configurações de cada usuário (valores padrão abaixo). */
+export const CONFIG_PADRAO = { limiteEstoqueBaixo: 5, diasVencimento: 7, alertaEstoque: true, alertaValidade: true };
+
+let cfg = { ...CONFIG_PADRAO };
+
+const inteiro = (v, min, max, padrao) => {
+  const n = Number(v);
+  return v !== "" && v != null && Number.isInteger(n) && n >= min && n <= max ? n : padrao;
+};
+
+export function normalizarConfiguracao(c = {}) {
+  return {
+    limiteEstoqueBaixo: inteiro(c.limiteEstoqueBaixo, 0, 1000, CONFIG_PADRAO.limiteEstoqueBaixo),
+    diasVencimento: inteiro(c.diasVencimento, 0, 365, CONFIG_PADRAO.diasVencimento),
+    alertaEstoque: c.alertaEstoque !== false,
+    alertaValidade: c.alertaValidade !== false
+  };
+}
+export function definirConfiguracao(c) { cfg = normalizarConfiguracao(c); }
+export function obterConfiguracao() { return { ...cfg }; }
 
 export function hojeSemHora() { const h = new Date(); h.setHours(0, 0, 0, 0); return h; }
 
@@ -28,16 +45,16 @@ export function textoValidade(dias) {
 export function alertasDoProduto(p, hoje = hojeSemHora()) {
   const lista = [];
   const qtd = Number(p.quantidade) || 0;
-  const limite = (p.estoqueMinimo !== undefined && p.estoqueMinimo !== "" && !isNaN(Number(p.estoqueMinimo))) ? Number(p.estoqueMinimo) : LIMITE_ESTOQUE_BAIXO;
-  if (qtd <= limite) {
+  const limite = (p.estoqueMinimo !== undefined && p.estoqueMinimo !== "" && !isNaN(Number(p.estoqueMinimo))) ? Number(p.estoqueMinimo) : cfg.limiteEstoqueBaixo;
+  if (cfg.alertaEstoque && qtd <= limite) {
     lista.push({ tipo: "estoque", prioridade: qtd === 0 ? 1 : 3, ordem: qtd, grave: true,
       titulo: qtd === 0 ? "Produto sem estoque" : "Produto com estoque baixo",
       detalhe: qtd === 0 ? "sem unidades em estoque" : `restam ${qtd} ${qtd === 1 ? "unidade" : "unidades"}` });
   }
   const val = paraData(p.validade ?? p.dataValidade);
-  if (val) {
+  if (cfg.alertaValidade && val) {
     const dias = Math.round((val - hoje) / 86400000);
-    if (dias <= DIAS_VENCIMENTO) {
+    if (dias <= cfg.diasVencimento) {
       lista.push({ tipo: "validade", prioridade: dias < 0 ? 0 : 2, ordem: dias, grave: dias < 0,
         titulo: dias < 0 ? "Produto vencido" : "Produto próximo do vencimento",
         detalhe: textoValidade(dias) });

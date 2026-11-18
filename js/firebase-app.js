@@ -1,5 +1,4 @@
-/* Inicialização única do Firebase (Auth + Firestore). A versão do SDK fica só aqui.
-   Todas as telas importam o que precisam a partir deste arquivo. */
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -18,7 +17,8 @@ export {
 
 export {
   doc, getDoc, setDoc, serverTimestamp,
-  collection, query, where, onSnapshot, getDocs, addDoc, updateDoc, deleteDoc
+  collection, query, where, onSnapshot, getDocs, addDoc, updateDoc, deleteDoc,
+  writeBatch, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* Cria o perfil em usuarios/{uid} se ainda não existir. Nunca grava senha. */
