@@ -1,6 +1,6 @@
 :root {
-  --azul: #5170FF;
-  --laranja: #F4511E;
+  --azul: #4466FB;
+  --laranja: #DB3806;
   --texto: #1F2937;
   --cinza: #6B7280;
   box-sizing: border-box
@@ -126,6 +126,17 @@ header {
   align-items: center;
   border-radius: 999px
 }
+/* Remove o botão automático de mostrar senha do navegador */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none;
+}
+
+/* Remove ícones nativos de campos de senha */
+input[type="password"] {
+    -webkit-appearance: none;
+    appearance: none;
+}
 
 @media (min-width:761px) {
 
@@ -139,6 +150,17 @@ header {
   }
 }
 
+/* Remove o botão automático de mostrar senha do navegador */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none;
+}
+
+/* Remove ícones nativos de campos de senha */
+input[type="password"] {
+    -webkit-appearance: none;
+    appearance: none;
+}
 @media (max-width:760px) {
   .nav img {
     height: 42px

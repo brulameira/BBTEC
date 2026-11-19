@@ -4,7 +4,7 @@ import {
   sendPasswordResetEmail, garantirPerfil, lembrarUsuario
 } from "./firebase-app.js";
 
-const DESTINO = (location.hostname === "localhost" || location.hostname === "127.0.0.1") ? "estoque.html" : "/estoque";
+const DESTINO = "estoque.html"; // para onde ir depois de entrar
 
 const $ = (id) => document.getElementById(id);
 const form = $("form");
@@ -121,3 +121,14 @@ if (linkSenha) {
     }
   });
 }
+
+/* ---------- Botão "olho": mostrar / ocultar senha ---------- */
+document.querySelectorAll(".olho").forEach((botao) => {
+  botao.addEventListener("click", () => {
+    const alvo = document.getElementById(botao.dataset.alvo);
+    const mostrar = alvo.type === "password";
+    alvo.type = mostrar ? "text" : "password";
+    botao.setAttribute("aria-pressed", String(mostrar));
+    botao.setAttribute("aria-label", mostrar ? "Ocultar senha" : "Mostrar senha");
+  });
+});
