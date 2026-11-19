@@ -4,7 +4,7 @@
 
 O **BBtec** é um sistema web de controle de estoque criado para ajudar **pequenas e médias empresas** a organizar seus produtos. Com ele, o usuário cadastra estoques, controla produtos (preço, quantidade, validade e fornecedor) e recebe **alertas automáticos** quando um produto está com estoque baixo ou perto do vencimento.
 
-🔗 **Site publicado:** colar link do site
+🔗 **Site publicado:** https://bbtec-fd1d0.web.app/
 
 ---
 
