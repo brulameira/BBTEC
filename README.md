@@ -30,7 +30,7 @@ O **BBtec** é um sistema web de controle de estoque criado para ajudar **pequen
 
 | Nome | GitHub | Responsabilidades |
 |------|--------|-------------------|
-| Bruna Cristina | [@brulameira](https://github.com/usuario) | Tela do usuário: estoques, produtos e alertas |
+| Bruna Cristina | [@brulameira](https://github.com/brulameira) | Tela do usuário: estoques, produtos e alertas |
 | Bianca Santos  | [@biasanttz](https://github.com/biasanttz) | Tela Inicial, Tela de Cadastro |
 | Henrique Lyhan | [@lyhan32](https://github.com/lyhan32) | Tela de Login, HTML, CSS |
 
